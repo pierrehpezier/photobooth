@@ -1,3 +1,14 @@
+Description
+===========
+
+Le photomaton utilisé pour mon mariage. Ce photomaton permet d'imprimer des photos dans une soirée pour environ 0.30€ la photo.
+
+Une série de 6 photos sont prises et assemblées en une seule. L'utilisateur peut choisir d'imprimer ou non la photo. Elle est téléchargeable via un QRCode à tout moment via un point d'accès Wi-Fi ouvert par le photomaton.
+
+voir:
+  * doc/Guide de téléchagement.pdf
+  * doc/Guide d'utilisation du photomaton.pdf
+
 photomaton
 ==========
 
@@ -8,6 +19,7 @@ Testé sur:
  * Imprimante Selphy cp910
  * Relais SODIAL(R) 5V MODULE 2 CANAUX POUR ARDUINO PIC ARM AVR DSP
  * NES Joypad
+ * Un Relai Wi-Fi hors d'age
 
 Des ajustement sur la résolution des images est à prévoir si le matériel est différent.
 
@@ -15,6 +27,7 @@ avec:
  * Raspbian GNU/Linux 8 (jessie)
  * LXDE
  * python2
+ * gutenprint-5.2.12
 
 Configuration:
 ==============
@@ -27,7 +40,7 @@ installer les modules python suivants:
  * qrcode
  * RPi
 
-copier show-all-images-in-a-folder-with-php dans /var/www/html
+copier show-all-images-in-a-folder-with-php dans /var/www/html et autoriser le programme photomaton à écrire dedans.
 
 ajouter la ligne suivante dans /.config/lxsession/LXDE-pi/autostart:
 @/home/pi/photomaton/photomaton.py
