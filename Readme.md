@@ -42,11 +42,14 @@ installer les modules python suivants:
 
 copier show-all-images-in-a-folder-with-php dans /var/www/html et autoriser le programme photomaton à écrire dedans.
 
-ajouter la ligne suivante dans /.config/lxsession/LXDE-pi/autostart:
+ajouter la ligne suivante dans ~/.config/lxsession/LXDE-pi/autostart:
+
+```
 @/home/pi/photomaton/photomaton.py
 @xset s noblank
 @xset s off
 @xset -dpms
+```
 
 TODO:
 =====
