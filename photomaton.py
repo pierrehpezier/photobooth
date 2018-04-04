@@ -38,9 +38,7 @@ class Photomaton:
         self.printtime = int(conf.get('MENU', 'printtime'))
         self.gpioport = int(conf.get('MENU', 'gpioport'))
         self.flash = int(conf.get('MENU', 'flash'))
-        self.check_erreurs()
         ##La webcam: PiCamera class
-        self.camera = picamera.PiCamera()
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.gpioport, GPIO.OUT, initial=GPIO.HIGH)
         pygameinfo = pygame.display.Info()
@@ -60,6 +58,8 @@ class Photomaton:
         pygame.mouse.set_visible(False)
         ##Nombre de photos à prendre. Attention à vérifier que Assemble gère ce nombre de photos
         self.nbphotos = 6
+        self.check_erreurs()
+        self.camera = picamera.PiCamera()
         pygame.joystick.Joystick(0).init()
         self.run()
 
@@ -114,7 +114,7 @@ class Photomaton:
     def _check_erreurs(self):
         try:
             picamera.PiCamera()
-        except PiCameraError:
+        except picamera.exc.PiCameraError:
             self.showtext(u'Webcam absente!', color=(255, 0, 0), fill=True, flip=True)
             syslog.syslog(syslog.LOG_INFO, 'Webcam absente')
             return False
