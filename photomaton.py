@@ -38,6 +38,7 @@ class Photomaton:
         self.printtime = int(conf.get('MENU', 'printtime'))
         self.gpioport = int(conf.get('MENU', 'gpioport'))
         self.flash = int(conf.get('MENU', 'flash'))
+        self.check_erreurs()
         ##La webcam: PiCamera class
         self.camera = picamera.PiCamera()
         GPIO.setmode(GPIO.BCM)
@@ -56,10 +57,9 @@ class Photomaton:
         self.font = pygame.font.Font(pygame.font.get_default_font(), self.fontwidth)
         ##Surface pygame
         self.screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
-	pygame.mouse.set_visible(False)
+        pygame.mouse.set_visible(False)
         ##Nombre de photos à prendre. Attention à vérifier que Assemble gère ce nombre de photos
         self.nbphotos = 6
-        self.check_erreurs()
         pygame.joystick.Joystick(0).init()
         self.run()
 
@@ -112,6 +112,12 @@ class Photomaton:
             time.sleep(1)
 
     def _check_erreurs(self):
+        try:
+            picamera.PiCamera()
+        except PiCameraError:
+            self.showtext(u'Webcam absente!', color=(255, 0, 0), fill=True, flip=True)
+            syslog.syslog(syslog.LOG_INFO, 'Webcam absente')
+            return False
         if pygame.joystick.get_count() != 1:
             self.showtext(u'Joystick absent!', color=(255, 0, 0), fill=True, flip=True)
             syslog.syslog(syslog.LOG_INFO, 'Joystick absent')
@@ -211,7 +217,7 @@ class Photomaton:
     def admin_menu(self):
         '''!Menu d'administration du photomaton. Déclanché par la touche start sur le menu de base
         '''
-        if self.flash:	
+        if self.flash:
             commands = {u'Redémarrer le photomaton': self._reboot, 'Arreter le photomaton': self._shutdown, u'Quitter le programme': self._quit, u'Annuler': None, u'Désactiver le flash': self._desactiver_flash}
         else:
             commands = {u'Redémarrer le photomaton': self._reboot, 'Arreter le photomaton': self._shutdown, u'Quitter le programme': self._quit, u'Annuler': None, u'Activer le flash': self._activer_flash}
@@ -379,4 +385,3 @@ if __name__ == '__main__':
             print 'Erreur:', str(error)
             syslog.syslog('Erreur: ' + str(error))
         time.sleep(1)
-

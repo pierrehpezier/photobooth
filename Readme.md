@@ -32,28 +32,83 @@ avec:
 Configuration:
 ==============
 
-installer apache2 avec php
+1 Installer les dépendances système
+```
+sudo apt-get update
+sudo apt-get install -y apache2 php libapache2-mod-php python-pygame python-cups cups
+```
 
-installer les modules python suivants:
- * picamera
- * pygame
- * qrcode
- * RPi
-
-copier show-all-images-in-a-folder-with-php dans /var/www/html et autoriser le programme photomaton à écrire dedans.
-
-ajouter la ligne suivante dans ~/.config/lxsession/LXDE-pi/autostart:
+2 Installer les dépendances python:
 
 ```
-@/home/pi/photomaton/photomaton.py
+cd photobooth
+pip install -r requirements.txt --user
+```
+
+3 Copier show-all-images-in-a-folder-with-php dans /var/www/html et autoriser le programme photomaton à écrire dedans:
+
+```
+cd
+git clone https://github.com/mikelothar/show-all-images-in-a-folder-with-php.git
+sudo cp -r show-all-images-in-a-folder-with-php/* /var/www/html/
+sudo chown -R www-data:www-data /var/www/html/img
+sudo rm -f /var/www/html/img/*
+```
+
+4 Configurer les services au démarrage
+
+4.1 Lancement d'apache au démarrage
+
+```
+sudo systemctl enable apache2
+sudo systemctl start apache2
+```
+
+4.2 Optionnel: SSH au démarrage (Attention à la sécurité)
+
+```
+sudo systemctl enable ssh
+sudo systemctl start ssh
+```
+
+4.3 Configurer le photomaton au démarrage de la machine
+
+```
+cat << EOF >> ~/.config/lxsession/LXDE-pi/autostart
+@/usr/bin/python2 /home/pi/photobooth/photomaton.py
 @xset s noblank
 @xset s off
 @xset -dpms
+EOF
+```
+
+4.4 Démarrage de cups
+
+```
+sudo systemctl enable cups
+sudo systemctl start cups
+sudo adduser pi lpadmin
+```
+
+5 Configurer le driver d'imprimante
+
+Télécharger gutenprint: https://sourceforge.net/projects/gimp-print/files/
+```
+tar xjvf gutenprint-5.3.0-pre1.tar.bz2
+rm -f gutenprint-5.3.0-pre1.tar.bz2
+cd gutenprint-5.3.0-pre1
+./configure
+make
+sudo make install
+```
+
+6 Configurer la caméra
+
+```
+sudo raspi-config
 ```
 
 TODO:
 =====
 
 Problème de retour imprimante. Aucune information sur l'alimentation papier et le niveau encre. Utiliser la dernière version de gutenprint.
-
-
