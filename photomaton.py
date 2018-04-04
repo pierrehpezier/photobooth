@@ -2,9 +2,9 @@
 # -*- coding:utf-8 -*-
 '''!Fichier main
 '''
+import syslog
 import sys
 import os
-import syslog
 import time
 import io
 import ConfigParser
@@ -76,7 +76,7 @@ class Photomaton:
         if highres:
             self.camera.resolution = (2592, 1944)
             self.camera.capture(image, format='rgba', use_video_port=False)
-            resolution = (2592, 1952)#FIXME: Resolution trick!! C'est hyper crade.
+            resolution = (2592, 1952)#Note: Resolution trick!! C'est hyper crade, pas trouvé mieux.
         else:
             self.camera.resolution = (640, 480)
             self.camera.capture(image, format='rgba', use_video_port=True)
@@ -84,17 +84,17 @@ class Photomaton:
         img = pygame.image.fromstring(image.getvalue(), resolution, 'RGBA').convert()
         if highres and img.get_at((10, 10))[:3] == (0, 0, 0):
             #Bug de la picam 1.2. Elle renvoie une image noire. Dans ce cas, on reprends
-            print 'image noire, on reprends'
+            print('image noire, on reprends')
             img = self.prendre_photo(highres, flash)
         self.flash_off()
-        print 'photo prise en', time.time() - time1, 'secondes'
+        print('photo prise en', time.time() - time1, 'secondes')
         syslog.syslog(syslog.LOG_INFO, 'Photo prise')
         return img
 
     def flash_on(self):
         '''!Allumer les spots
         '''
-        print 'flash ON'
+        print('flash ON')
         #délai de mise en marche
         #time.sleep(0.2)
         GPIO.output(self.gpioport, GPIO.LOW)
@@ -102,7 +102,7 @@ class Photomaton:
     def flash_off(self):
         '''!Eteindre les spots
         '''
-        print 'flash OFF'
+        print('flash OFF')
         GPIO.output(self.gpioport, GPIO.HIGH)
 
     def check_erreurs(self):
@@ -139,7 +139,7 @@ class Photomaton:
                 syslog.syslog(syslog.LOG_INFO, 'Imprimante non connectee')
                 return False
         except RuntimeError as erreur:
-            print erreur
+            print(erreur)
             self.showtext(u'Erreur de connexion a CUPS', color=(255, 0, 0), fill=True, flip=True)
             syslog.syslog(syslog.LOG_INFO, 'Impossible de se connecter au serveur d\'impression')
             return False
@@ -163,15 +163,15 @@ class Photomaton:
             self.screen.blit(img, (self.width/2 - 230, 250))
             pygame.event.clear()
             pygame.display.flip()
-            print 'wait...'
+            print('wait...')
             event = pygame.event.wait()
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                print 'À la prochaine!'
+                print('À la prochaine!')
                 pygame.quit()
                 syslog.syslog(syslog.LOG_INFO, 'Sortie à la demande de l\'utilisateur')
                 sys.exit(0)
             elif event.type == pygame.JOYBUTTONDOWN:
-                print 'bouton pressé:', event.button
+                print('bouton pressé:', event.button)
                 if event.button in [JOYBUTTONA, JOYBUTTONB]:
                     self.prendre_photos()
                 elif event.button == JOYBUTTONSTART:
@@ -199,7 +199,9 @@ class Photomaton:
 
     @staticmethod
     def get_event():
-       	pygame.event.clear()
+        '''!Récupère un évènement de console NES
+        '''
+        pygame.event.clear()
         while True:
             if pygame.joystick.Joystick(0).get_axis(0) > 0:
                 return JOYBUTTONRIGHT
@@ -211,7 +213,7 @@ class Photomaton:
                 return JOYBUTTONDOWN
             myevent = pygame.event.poll()
             if myevent != pygame.NOEVENT:
-	        if myevent.type == pygame.JOYBUTTONDOWN:
+                if myevent.type == pygame.JOYBUTTONDOWN:
                     return myevent.button
 
     def admin_menu(self):
@@ -248,11 +250,11 @@ class Photomaton:
                 if 'le flash' in text:
                     return
             elif bouton == JOYBUTTONUP:
-                    current -= 1
-                    self.background()
+                current -= 1
+                self.background()
             elif bouton == JOYBUTTONDOWN:
-                    current += 1
-                    self.background()
+                current += 1
+                self.background()
             current = current % len(commands)
 
     def background(self):
@@ -273,7 +275,7 @@ class Photomaton:
             #Affiche le compte à rebours et l'aperçu
             self.screen.blit(self.font.render('photo {}/{}'.format(photonb + 1, self.nbphotos), 2, (255, 255, 255)), (0, 0))
             while self.sleeptime - int(time.time()-time1) > 0:
-                print 'capture photo:', photonb
+                print('capture photo:', photonb)
                 counter = self.sleeptime - int(time.time()-time1)
                 img = pygame.image.load(os.path.join(self.curdir, 'images/{}.png'.format(counter))).convert()
                 self.screen.blit(img, (self.width/2 - 36, 50))
@@ -340,7 +342,7 @@ class Photomaton:
         self.screen.blit(img, (0, 0))
         pygame.display.flip()
         conn = cups.Connection()
-        print 'impression demandée!!'
+        print('impression demandée!!')
         conn.printFile(conn.getPrinters().keys()[0], filename, title='IMG', options={'StpBorderless': 'True'})
         #temporisation avec barre de chargement
         for i in range(self.printtime * 10, 0, -1):
@@ -382,6 +384,6 @@ if __name__ == '__main__':
             syslog.syslog(syslog.LOG_INFO, 'Lancement')
             Photomaton()
         except Exception as error:
-            print 'Erreur:', str(error)
+            print('Erreur:', str(error))
             syslog.syslog('Erreur: ' + str(error))
         time.sleep(1)

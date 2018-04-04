@@ -6,9 +6,9 @@ import time
 import socket
 import struct
 import os
-import syslog
 import ConfigParser
 import pygame
+import syslog
 import qrcode
 
 class Render:
@@ -45,7 +45,7 @@ class Render:
         @param filename La cible du lien
         '''
         url = 'http://{}/img/{}'.format(self.get_ip(), os.path.split(filename)[-1])
-        print 'url:', url
+        print('url:', url)
         myqr = qrcode.QRCode(version=2, border=1)
         myqr.add_data(url)
         myqr.make(fit=True)
@@ -58,12 +58,12 @@ class Render:
         @param piclist La liste des chemins complets des images.
         @return Le chemin complet vers l'image générée.
         '''
-        print 'on render, courage!'
+        print('on render, courage!')
         time1 = time.time()
         assembler = Assemble(piclist)
         out = assembler.filename()
         time2 = int(time.time() - time1)
-        print out, 'fait en', time2, 'secondes'
+        print(out, 'fait en', time2, 'secondes')
         syslog.syslog(syslog.LOG_INFO, 'Rendu effectué en {} secondes'.format(time2))
         return out
 
@@ -167,10 +167,10 @@ class Assemble:
     def save(self):
         '''!Sauver l'image générée
         '''
-        print 'on sauve'
+        print('on sauve')
         t1 = time.time()
         pygame.image.save(self.surface, self.output)
-        print 'sauvée en:', time.time() - t1, 'secondes'
+        print('sauvée en:', time.time() - t1, 'secondes')
 
     def addphotos(self, photolist):
         '''!Ajout des photos sur la surface
@@ -196,5 +196,4 @@ if __name__ == '__main__':
     pygame.display.set_mode((800, 600))
     TIME1 = time.time()
     ASSEMBLER = Assemble([pygame.image.load('/tmp/tmp.GAmKy2J90o.jpg')]*6)
-    print ASSEMBLER.filename(), 'généré en', time.time() - TIME1, 'secondes'
-
+    print(ASSEMBLER.filename(), 'généré en', time.time() - TIME1, 'secondes')
