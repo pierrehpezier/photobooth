@@ -50,9 +50,9 @@ class Photomaton:
         ##Hauteur de l'écran
         self.height = pygameinfo.current_h
         ##Taille de la police
-        self.fontwidth = 30
+        self.fontsize = int(conf.get('MENU', 'fontsize'))
         ##Choix de la police
-        self.font = pygame.font.Font(pygame.font.get_default_font(), self.fontwidth)
+        self.font = pygame.font.Font(os.path.join(self.curdir, conf.get('MENU', 'font')), self.fontsize)
         ##Surface pygame
         self.screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
         pygame.mouse.set_visible(False)
