@@ -92,21 +92,16 @@ sudo adduser pi lpadmin
 
 5 Configurer le driver d'imprimante
 
-Télécharger gutenprint: https://sourceforge.net/projects/gimp-print/files/
-```
-tar xjvf gutenprint-5.3.0-pre1.tar.bz2
-rm -f gutenprint-5.3.0-pre1.tar.bz2
-cd gutenprint-5.3.0-pre1
-./configure
-make
-sudo make install
-```
+voir les images dans doc/images
 
 6 Configurer la caméra
 
 ```
 sudo raspi-config
+5 Interfacing Options -> P1 Camera -> enable
 ```
+Changer la résolution si besoin avec la même commande
+Allouer 128MB de mémoire vidéo
 
 TODO:
 =====

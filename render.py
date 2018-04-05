@@ -11,6 +11,8 @@ import pygame
 import syslog
 import qrcode
 
+TEMPPATH = '/dev/shm/'
+
 class Render:
     '''!Classe de génération du qrcode
     '''
@@ -50,7 +52,7 @@ class Render:
         myqr.add_data(url)
         myqr.make(fit=True)
         image = myqr.make_image()
-        image.save(os.path.join('/tmp', 'qrcode.png'))
+        image.save(os.path.join(TEMPPATH, 'qrcode.png'))
 
     @staticmethod
     def generate_render(piclist):
