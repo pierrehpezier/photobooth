@@ -259,7 +259,7 @@ class Photomaton:
         #Boucle de contrôle
         self.background()
         while True:
-            yoffset = 50
+            yoffset = 5
             #Affichage des options
             for i in range(len(commands)):
                 text = commands.keys()[i]
@@ -267,7 +267,7 @@ class Photomaton:
                 self.screen.blit(img, (arrow.get_width() + 50, yoffset))
                 if i == current:
                     self.screen.blit(arrow, (10, yoffset + img.get_height() / 2 - arrow.get_height() / 2))
-                yoffset += 50 + img.get_height()
+                yoffset += 20 + img.get_height()
             pygame.display.flip()
             #Traitement des entrées utilisateur
             bouton = self.get_event()
@@ -326,7 +326,7 @@ class Photomaton:
         img = pygame.image.load(self._get_image_path('coyote_rocket_by_mreiof-d5va4sl.jpg')).convert_alpha()
         img = pygame.transform.smoothscale(img, (self.screen.get_width(), self.screen.get_height()))
         self.screen.blit(img, (0, 0))
-        self.showtext(u'Génération en cours, patientez!!', color=self.fontcolor, fill=False, flip=True, offset=-200, scale=3)
+        self.showtext(u'Génération en cours, patientez!!', color=self.fontcolor, fill=False, flip=True, scale=3)
         #Photo rendering. Voir render.py
         filename = render.Render().gen(photolist)
         #Ecran d'impression
@@ -342,10 +342,10 @@ class Photomaton:
         #Images imprimer OUI/NON FLECHE??
         img = pygame.image.load(self._get_image_path('KO.png')).convert_alpha()
         img = pygame.transform.smoothscale(img, (self.width/4 - 14, self.height/4 + 20))
-        self.screen.blit(img, (0, self.height/2 - 50))
+        self.screen.blit(img, (0, self.height/2))
         img = pygame.image.load(self._get_image_path('OK.png')).convert_alpha()
         img = pygame.transform.smoothscale(img, (self.width/4 - 14, self.height/4 + 20))
-        self.screen.blit(img, (self.width - img.get_width(), self.height/2 - 50))
+        self.screen.blit(img, (self.width - img.get_width(), self.height/2))
         pygame.display.flip()
         #En attente de choix utilisateur
         pygame.event.clear()

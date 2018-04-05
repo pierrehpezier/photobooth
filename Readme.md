@@ -103,6 +103,19 @@ sudo raspi-config
 Changer la résolution si besoin avec la même commande
 Allouer 128MB de mémoire vidéo
 
+7 Montage automatique d'un disque
+
+Brancher et formater le disque
+identifier l'uuid de ce disque
+```
+blkid
+```
+Ajouter une ligne dans /etc/fstab
+```
+UUID=1f1fa48b-1128-4931-a632-d351cd4a854a /var/www/img ext2 defaults 0 1
+```
+
+
 TODO:
 =====
 
