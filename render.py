@@ -48,6 +48,7 @@ class Render:
         '''
         url = 'http://{}/img/{}'.format(self.get_ip(), os.path.split(filename)[-1])
         print('url:', url)
+        syslog.syslog(syslog.LOG_INFO, 'Image générée: {}'.format(filename))
         myqr = qrcode.QRCode(version=2, border=1)
         myqr.add_data(url)
         myqr.make(fit=True)
@@ -135,10 +136,6 @@ class Assemble:
         '''!Configure le fond d'écran
         '''
         self.surface.fill(self.bgcolor)
-        #Décommenter pour ajouter une image en arrière plan
-        #img = pygame.image.load(os.path.join(self.curdir, self.fondecran)).convert()
-        #img = pygame.transform.scale(img, self.resolution)
-        #self.surface.blit(img, (0, 0))
 
     def ajoutbanderole(self):
         '''!Ajout de la banderole sous les photos
@@ -158,7 +155,6 @@ class Assemble:
     def set_footer(self):
         '''!Ajout de l'image en pied de page
         '''
-        #xmarge = 0
         ymarge = 300
         #pied de page 1
         img = pygame.image.load(os.path.join(self.curdir, self.piedpage1)).convert_alpha()
@@ -179,7 +175,7 @@ class Assemble:
         @param photolist la liste des 6 images pygame
         '''
         xright = self.resolution[0] - self.photoxmarge - self.photoscale[0]
-	#Rendering photos
+	    #Rendering photos
         #LIGNE 3
         yoffset = self.photoscale[1] * 2 + self.photoymarge * 3 + self.photoiniymarge
         self.surface.blit(photolist[5], (xright, yoffset))
@@ -194,6 +190,9 @@ class Assemble:
         self.surface.blit(photolist[0], (self.photoxmarge, yoffset))
 
 if __name__ == '__main__':
+    '''
+    Test
+    '''
     pygame.init()
     pygame.display.set_mode((800, 600))
     TIME1 = time.time()

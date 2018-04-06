@@ -14,7 +14,7 @@ import pygame
 import render
 import picamera
 
-TEMPPATH = '/tmp/'
+TEMPPATH = '/dev/shm/'
 
 JOYBUTTONA = 1
 JOYBUTTONB = 2
@@ -92,7 +92,8 @@ class Photomaton:
             print('image noire, on reprends')
             img = self.prendre_photo(highres, flash)
         self.flash_off()
-        print('photo prise en', time.time() - time1, 'secondes')
+        if highres:
+            print('photo prise en', time.time() - time1, 'secondes')
         syslog.syslog(syslog.LOG_INFO, 'Photo prise')
         return img
 
