@@ -18,8 +18,8 @@ Testé sur:
  * Ecran pour raspberry 10"
  * Imprimante Selphy cp910
  * Relais SODIAL(R) 5V MODULE 2 CANAUX POUR ARDUINO PIC ARM AVR DSP
- * NES Joypad
- * Un Relai Wi-Fi hors d'age
+ * NES Joypad retrolink
+ * Un Relai Wi-Fi SMC barridade N
 
 Des ajustement sur la résolution des images est à prévoir si le matériel est différent.
 
@@ -51,7 +51,7 @@ pip install -r requirements.txt --user
 cd
 git clone https://github.com/mikelothar/show-all-images-in-a-folder-with-php.git
 sudo cp -r show-all-images-in-a-folder-with-php/* /var/www/html/
-sudo chown -R www-data:www-data /var/www/html/img
+sudo chown -R pi:pi /var/www/html/img
 sudo rm -f /var/www/html/img/*
 ```
 
@@ -110,11 +110,14 @@ identifier l'uuid de ce disque
 ```
 blkid
 ```
-Ajouter une ligne dans /etc/fstab
+Ajouter une ligne dans /etc/fstab (à adapter)
 ```
-UUID=1f1fa48b-1128-4931-a632-d351cd4a854a /var/www/img ext2 defaults 0 1
+echo "UUID=1f1fa48b-1128-4931-a632-d351cd4a854a /var/www/img ext2 defaults 0 1" >> /etc/fstab
+mount
+sudo chown -R pi:pi /var/www/html/img
 ```
 
+6 Conn
 
 TODO:
 =====
