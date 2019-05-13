@@ -18,16 +18,17 @@ Testé sur:
  * Ecran pour raspberry 10"
  * Imprimante Selphy cp910
  * Relais SODIAL(R) 5V MODULE 2 CANAUX POUR ARDUINO PIC ARM AVR DSP
- * NES Joypad
- * Un Relai Wi-Fi hors d'age
+ * NES Joypad USB HID
+ * Un Relai Wi-Fi hors d'age Wi-Fi to ethernet
 
 Des ajustement sur la résolution des images est à prévoir si le matériel est différent.
 
 avec:
- * Raspbian GNU/Linux 8 (jessie)
+ * Raspbian GNU/Linux 8 (https://www.raspberrypi.org/downloads/raspbian/)
  * LXDE
  * python2
- * gutenprint-5.2.12
+ * gutenprint-5.2.12 (git clone git://git.code.sf.net/p/gimp-print/source gimp-print-source)
+
 
 Configuration:
 ==============
@@ -41,6 +42,10 @@ installer les modules python suivants:
  * RPi
 
 copier show-all-images-in-a-folder-with-php dans /var/www/html et autoriser le programme photomaton à écrire dedans.
+```
+https://github.com/mikelothar/show-all-images-in-a-folder-with-php
+```
+
 
 ajouter la ligne suivante dans ~/.config/lxsession/LXDE-pi/autostart:
 
