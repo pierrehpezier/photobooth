@@ -13,52 +13,46 @@ photomaton
 ==========
 
 Testé sur:
+----------
+
  * Raspberry pi B
  * Picaméra v1.2
  * Ecran pour raspberry 10"
  * Imprimante Selphy cp910
- * Relais SODIAL(R) 5V MODULE 2 CANAUX POUR ARDUINO PIC ARM AVR DSP
- * NES Joypad USB HID
- * Un Relai Wi-Fi hors d'age Wi-Fi to ethernet
-
-Des ajustement sur la résolution des images est à prévoir si le matériel est différent.
+ * Relais SODIAL(R) 5V MODULE 2 CANAUX POUR ARDUINO PIC ARM AVR DSPDes ajustement sur la résolution des images est à prévoir si le matériel est différent.
 
 avec:
- * Raspbian GNU/Linux 8 (https://www.raspberrypi.org/downloads/raspbian/)
+-----
+
+ * Raspbian Buster with desktop and recommended software (http://director.downloads.raspberrypi.org/raspbian_full/images/raspbian_full-2019-07-12/2019-07-10-raspbian-buster-full.zip)
  * LXDE
  * python2
- * gutenprint-5.2.12 (git clone git://git.code.sf.net/p/gimp-print/source gimp-print-source)
 
+INSTALL:
+========
 
-Configuration:
-==============
+1 Télécharger et installer raspbian [Version testée](http://director.downloads.raspberrypi.org/raspbian_full/images/raspbian_full-2019-07-12/2019-07-10-raspbian-buster-full.zip)
 
-installer apache2 avec php
-
-installer les modules python suivants:
- * picamera
- * pygame
- * qrcode
- * RPi
-
-copier show-all-images-in-a-folder-with-php dans /var/www/html et autoriser le programme photomaton à écrire dedans.
+2 Installer le socle logiciel
 ```
-https://github.com/mikelothar/show-all-images-in-a-folder-with-php
+sudo "$(curl https://raw.githubusercontent.com/pierrehpezier/photobooth/master/install_stript.sh)"
 ```
+3 Configurer l'imprimante
+Se connecter à http://localhost:631/
 
 
-ajouter la ligne suivante dans ~/.config/lxsession/LXDE-pi/autostart:
-
-```
-@/home/pi/photomaton/photomaton.py
-@xset s noblank
-@xset s off
-@xset -dpms
-```
-
-TODO:
-=====
+FIXME:
+======
 
 Problème de retour imprimante. Aucune information sur l'alimentation papier et le niveau encre. Utiliser la dernière version de gutenprint.
 
 
+TODO:
+=====
+
+Translate to english
+Convert to python 3
+
+
+sudo raspi-config
+select: Advanced options -> Memory split -> and set at least 128MB
