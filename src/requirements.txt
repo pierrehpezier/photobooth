@@ -7,3 +7,4 @@ pycups
 Image
 Pillow-PIL
 pil-compat
+gpio4

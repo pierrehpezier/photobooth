@@ -11,8 +11,6 @@ import pygame
 import syslog
 import qrcode
 
-TEMPPATH = '/dev/shm/'
-
 class Render:
     '''!Classe de génération du qrcode
     '''
@@ -20,6 +18,9 @@ class Render:
         '''!Initialisation
         '''
         self.curdir = os.path.split(os.path.realpath(__file__))[0]
+        conf = configparser.ConfigParser()
+        conf.read(os.path.join(self.curdir, 'photomaton.conf'))
+        self.temppath = conf.get('CONF', 'temppath')
 
     @staticmethod
     def get_default_gateway_linux():
@@ -53,7 +54,7 @@ class Render:
         myqr.add_data(url)
         myqr.make(fit=True)
         image = myqr.make_image()
-        image.save(os.path.join(TEMPPATH, 'qrcode.png'))
+        image.save(os.path.join(self.temppath, 'qrcode.png'))
 
     @staticmethod
     def generate_render(piclist):
@@ -75,6 +76,7 @@ class Render:
         @return Le chemin complet vers le qrcode généré
         '''
         filename = self.generate_render(piclist)
+        del piclist
         self.genqrcode(filename)
         return filename
 
