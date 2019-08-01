@@ -23,6 +23,7 @@ Screenshots
 
 ![printing](doc/screenshots/printing.png)
 
+![preview](doc/images/pic_preview.jpg)
 
 photomaton
 ==========

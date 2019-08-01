@@ -1,4 +1,4 @@
-#!/usr/bin/env pypy3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
 Generate a preview from the template photo
