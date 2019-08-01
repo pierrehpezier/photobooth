@@ -8,8 +8,9 @@ import struct
 import os
 import configparser
 import pygame
-import syslog
+#custom imports
 import qrcode
+import logger
 
 class Render:
     '''!Classe de génération du qrcode
@@ -39,7 +40,9 @@ class Render:
         @return L'adresse IP
         '''
         try:
-            return [(s.connect((self.get_default_gateway_linux(), 67)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
+            return [(s.connect((self.get_default_gateway_linux(), 67)),
+                     s.getsockname()[0], s.close())
+                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
         except:
             return '127.0.0.1'
 
@@ -49,7 +52,7 @@ class Render:
         '''
         url = 'http://{}/img/{}'.format(self.get_ip(), os.path.split(filename)[-1])
         print('url:', url)
-        syslog.syslog(syslog.LOG_INFO, 'Image générée: {}'.format(filename))
+        logger.logger.logEvent(logger.LOG_INFO, 'Image générée: {}'.format(filename))
         myqr = qrcode.QRCode(version=2, border=1)
         myqr.add_data(url)
         myqr.make(fit=True)
@@ -68,7 +71,7 @@ class Render:
         out = assembler.filename()
         time2 = int(time.time() - time1)
         print(out, 'fait en', time2, 'secondes')
-        syslog.syslog(syslog.LOG_INFO, 'Rendu effectué en {} secondes'.format(time2))
+        logger.logger.logEvent(logger.LOG_INFO, 'Rendu effectué en {} secondes'.format(time2))
         return out
 
     def gen(self, piclist):
@@ -107,13 +110,16 @@ class Assemble:
         ##Largeur de la police
         self.fontsize = int(conf.get('RENDU', 'fontsize'))
         ##Initialisation de la fonte
-        self.font = pygame.font.Font(os.path.join(self.curdir, conf.get('RENDU', 'font')), self.fontsize)
+        self.font = pygame.font.Font(os.path.join(self.curdir,
+                                                  conf.get('RENDU', 'font')),
+                                     self.fontsize)
         ##Répertoire de destination
         self.destdir = conf.get('RENDU', 'destdir')
         ##Fichier de destination
-        self.output = os.path.join(self.destdir, '{}.jpg'.format(time.strftime('%H-%M-%S-%d%m%Y')))
+        self.output = os.path.join(self.destdir,
+                                   '{}.jpg'.format(time.strftime('%H-%M-%S-%d%m%Y')))
         ##redimentionnement des photos
-        for i in range(0, len(photolist)):
+        for i in range(len(photolist)):
             photolist[i] = pygame.transform.scale(photolist[i], self.photoscale)
         ##Surface utilisée pour le rendu
 	##beaucoup de RAM!
@@ -143,16 +149,13 @@ class Assemble:
         '''!Ajout de la banderole sous les photos
         '''
         img = pygame.image.load(os.path.join(self.curdir, self.banderole)).convert_alpha()
-        img = pygame.transform.scale(img, (int(self.resolution[0] * self.banderolewidth), int(img.get_height()* ((self.resolution[0] * self.banderolewidth)/float(img.get_width())))))
-        self.surface.blit(img, (self.resolution[0]/2 - img.get_width()/2, self.photoscale[1] * 3 + 3 * self.photoymarge + 50 + self.photoiniymarge))
-
-    def ajouttexte(self):
-        '''!Ajout d'un texte personnalisé
-        '''
-        texte = self.font.render(self.texte2, 1, (0, 0, 255))
-        self.surface.blit(texte, (self.surface.get_width()/2 - texte.get_width()/2, self.photoscale[1] * 3 + 3*100))
-        texte = self.font.render(self.texte1, 1, (0, 0, 255))
-        self.surface.blit(texte, (self.surface.get_width()/2 - texte.get_width()/2, self.photoscale[1] * 3 + 6*100))
+        img = pygame.transform.scale(img, (int(self.resolution[0] * self.banderolewidth),
+                                           int(img.get_height() *
+                                               ((self.resolution[0] *
+                                                 self.banderolewidth)/float(img.get_width())))))
+        self.surface.blit(img, (self.resolution[0]/2 - img.get_width()/2,
+                                self.photoscale[1] * 3 + 3 *
+                                self.photoymarge + 50 + self.photoiniymarge))
 
     def set_footer(self):
         '''!Ajout de l'image en pied de page
@@ -162,15 +165,16 @@ class Assemble:
         img = pygame.image.load(os.path.join(self.curdir, self.piedpage1)).convert_alpha()
         yimg1 = int(img.get_height() *  float(self.piedpage1width) / img.get_width())
         img = pygame.transform.scale(img, (self.piedpage1width, yimg1))
-        self.surface.blit(img, (self.surface.get_width()/2 - img.get_width()/2, self.resolution[1] - yimg1 - ymarge))
+        self.surface.blit(img, (self.surface.get_width()/2 - img.get_width()/2,
+                                self.resolution[1] - yimg1 - ymarge))
 
     def save(self):
         '''!Sauver l'image générée
         '''
         print('on sauve')
-        t1 = time.time()
+        time1 = time.time()
         pygame.image.save(self.surface, self.output)
-        print('sauvée en:', time.time() - t1, 'secondes')
+        print('sauvée en:', time.time() - time1, 'secondes')
 
     def addphotos(self, photolist):
         '''!Ajout des photos sur la surface

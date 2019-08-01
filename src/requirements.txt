@@ -8,3 +8,4 @@ Image
 Pillow-PIL
 pil-compat
 gpio4
+filelock

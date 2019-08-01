@@ -5,7 +5,7 @@ if [ "$EUID" -ne 0 ]
 fi
 #upgrade system
 apt-get update
-apt-get install -y libcups2-dev apache2 php libapache2-mod-php python-cups cups git vim pypy3 pypy3-dev libsdl1.2-dev libsdl-mixer1.2-dev libsdl-image1.2-dev libsdl-ttf2.0-dev libportmidi-dev python3-dev
+apt-get install -y gunicorn redis-server libcups2-dev apache2 php libapache2-mod-php python-cups cups git vim pypy3 pypy3-dev libsdl1.2-dev libsdl-mixer1.2-dev libsdl-image1.2-dev libsdl-ttf2.0-dev libportmidi-dev python3-dev
 apt-get remove -y python3-pygame python3-pil
 apt autoremove -y
 sudo -u pi wget https://bootstrap.pypa.io/get-pip.py
@@ -58,7 +58,20 @@ SuccessExitStatus=0
 [Install]
 WantedBy=multi-user.target
 EOF
+sudo -u pi cat << EOF >> /lib/systemd/system/redis.service
+[Service]
+Type=simple
+ExecStart=/usr/bin/redis-server
+User=pi
+Restart=on-failure
+TimeoutStopSec=3
+SuccessExitStatus=0
+
+[Install]
+WantedBy=multi-user.target
+EOF
 systemctl enable photobooth
+systemctl enable redis
 #enable printer
 adduser pi lpadmin
 systemctl enable cups

@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 '''!Fichier main
-On peut lancer avec pypy3/python3. Attention à l'exhaution mémoire
 '''
-import syslog
 import sys
 import os
 import time
 import io
 import configparser
-import cups
-import gpio4
 import pygame
-import render
+import cups
+#raspi imports
+import gpio4
 import picamera
+#Custom imports
+import logger
+import render
 
 JOYBUTTONA = 1
 JOYBUTTONB = 2
@@ -26,7 +27,11 @@ JOYBUTTONSTART = 9
 
 CURRDIR = os.path.abspath(os.path.dirname(__file__))
 
+
 class PhotomatonException(Exception):
+    '''
+    Raise a photomaton exception
+    '''
     def __init__(self, message, errors):
         super(PhotomatonException, self).__init__(message)
         self.errors = errors
@@ -39,42 +44,55 @@ class Photomaton:
         '''
         os.environ['DISPLAY'] = ':0.0'
         pygame.init()
-        self.curdir = CURRDIR
-        conf = configparser.ConfigParser()
-        conf.read(os.path.join(self.curdir, 'photomaton.conf'))
-        self.conf = conf
-        self.sleeptime = int(conf.get('MENU', 'sleeptime'))
-        self.printtime = int(conf.get('MENU', 'printtime'))
-        self.gpioport = int(conf.get('MENU', 'gpioport'))
-        self.flash = int(conf.get('MENU', 'flash'))
-        ftcolor = conf.get('MENU', 'fontcolor')
-        self.fontcolor = (int(ftcolor[:2], 16), int(ftcolor[2:4], 16), int(ftcolor[4:6], 16))
+        self.flash = True
+        self.refreshconf()
         ##La webcam: PiCamera class
-        self.GPIO = gpio4.GPIO()
-        self.GPIO.setmode(gpio4.constants.BOARD_NANO_PI)
-        self.GPIO.setup(pin=[self.gpioport,], state=gpio4.GPIO.OUT, initial=gpio4.GPIO.HIGH)
+        self.gpio = gpio4.GPIO()
+        self.gpio.setmode(gpio4.constants.BOARD_NANO_PI)
+        self.gpio.setup(pin=[self.gpioport,], state=gpio4.GPIO.OUT, initial=gpio4.GPIO.HIGH)
         pygameinfo = pygame.display.Info()
         size = (pygameinfo.current_w, pygameinfo.current_h)
-        self.destdir = conf.get('RENDU', 'destdir')
-        self.temppath = conf.get('CONF', 'temppath')
-        self.testmode = int(conf.get('DEV', 'testmode'))
         ##Largeur de l'écran
         self.width = pygameinfo.current_w
         ##Hauteur de l'écran
         self.height = pygameinfo.current_h
-        ##Taille de la police
-        self.fontsize = int(conf.get('MENU', 'fontsize'))
-        ##Choix de la police
-        self.font = pygame.font.Font(os.path.join(self.curdir, conf.get('MENU', 'font')), self.fontsize)
         ##Surface pygame
         self.screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
         pygame.mouse.set_visible(False)
         ##Nombre de photos à prendre. Attention à vérifier que Assemble gère ce nombre de photos
         self.nbphotos = 6
         self.check_erreurs(check_cam=True)
+        #init printer
+        conn = cups.Connection()
+        conn.cancelAllJobs(conn.getPrinters()[self.printername])
+        conn.enablePrinter(conn.getPrinters()[self.printername])
         self.camera = picamera.PiCamera()
         pygame.joystick.Joystick(0).init()
         self.run()
+
+    def refreshconf(self):
+        '''
+        Refresh the conf from config file
+        '''
+        self.conf = configparser.ConfigParser()
+        self.conf.read(os.path.join(CURRDIR, 'photomaton.conf'))
+        self.sleeptime = int(self.conf.get('MENU', 'sleeptime'))
+        self.printtime = int(self.conf.get('MENU', 'printtime'))
+        self.gpioport = int(self.conf.get('MENU', 'gpioport'))
+        self.flash = int(self.conf.get('MENU', 'flash'))
+        ftcolor = self.conf.get('MENU', 'fontcolor')
+        self.fontcolor = (int(ftcolor[:2], 16), int(ftcolor[2:4], 16), int(ftcolor[4:6], 16))
+        ##Taille de la police
+        self.fontsize = int(self.conf.get('MENU', 'fontsize'))
+        ##Choix de la police
+        self.font = pygame.font.Font(os.path.join(CURRDIR,
+                                                  self.conf.get('MENU', 'font')),
+                                     self.fontsize)
+        self.destdir = self.conf.get('RENDU', 'destdir')
+        self.temppath = self.conf.get('CONF', 'temppath')
+        self.testmode = int(self.conf.get('DEV', 'testmode'))
+        ##Imprimante
+        self.printername = self.conf.get('CONF', 'printername')
 
     def prendre_photo(self, highres=True, flash=True):
         '''! Prendre une photo en raw via la webcam raspberry V1.2
@@ -102,20 +120,20 @@ class Photomaton:
         self.flash_off()
         if highres:
             print('photo prise en', time.time() - time1, 'secondes')
-        syslog.syslog(syslog.LOG_INFO, 'Photo prise')
+        logger.logger.logEvent(logger.LOG_INFO, 'Photo prise')
         return img
 
     def flash_on(self):
         '''!Allumer les spots
         '''
         print('flash ON')
-        self.GPIO.output(self.gpioport, gpio4.GPIO.LOW)
+        self.gpio.output(self.gpioport, gpio4.GPIO.LOW)
 
     def flash_off(self):
         '''!Eteindre les spots
         '''
         print('flash OFF')
-        self.GPIO.output(self.gpioport, gpio4.GPIO.HIGH)
+        self.gpio.output(self.gpioport, gpio4.GPIO.HIGH)
 
     def check_erreurs(self, check_cam=False):
         '''!Vérifier que tout fonctionne. Bloque jusqu'à ce que tout soit OK
@@ -123,8 +141,9 @@ class Photomaton:
         while not self._check_erreurs(check_cam):
             time.sleep(1)
 
-    def _get_image_path(self, imagename):
-        imgdir = os.path.join(self.curdir, 'images')
+    @staticmethod
+    def _get_image_path(imagename):
+        imgdir = os.path.join(CURRDIR, 'images')
         return os.path.join(imgdir, imagename)
 
     def _check_erreurs(self, check_cam=False):
@@ -137,48 +156,71 @@ class Photomaton:
                 img = pygame.image.load(self._get_image_path('ErrorWebcam.png')).convert_alpha()
                 self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
                 pygame.display.flip()
-                syslog.syslog(syslog.LOG_INFO, 'Webcam absente')
+                logger.logger.logEvent(logger.LOG_ERROR, 'Webcam absente')
                 return False
         if pygame.joystick.get_count() != 1:
             self.showtext(u'Erreur: Joystick absent!', color=(255, 0, 0), fill=True, flip=False)
             img = pygame.image.load(self._get_image_path('ErrorManette.png')).convert_alpha()
             self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
             pygame.display.flip()
-            syslog.syslog(syslog.LOG_INFO, 'Joystick absent')
+            logger.logger.logEvent(logger.LOG_ERROR, 'Joystick absent')
             return False
         if (os.statvfs(self.destdir).f_bavail * os.statvfs(self.destdir).f_frsize)/1024 < 4000:
-            self.showtext(u'Erreur: Espace disque insuffisant!', color=(255, 0, 0), fill=True, flip=False)
+            self.showtext(u'Erreur: Espace disque insuffisant!',
+                          color=(255, 0, 0),
+                          fill=True,
+                          flip=False)
             img = pygame.image.load(self._get_image_path('ErrorDisk.png')).convert_alpha()
             self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
             pygame.display.flip()
-            syslog.syslog(syslog.LOG_INFO, 'Espace disque insuffisant')
+            logger.logger.logEvent(logger.LOG_ERROR, 'Espace disque insuffisant')
             return False
         if render.Render().get_ip() == '127.0.0.1':
             self.showtext(u'Erreur: Erreur réseau!', color=(255, 0, 0), fill=True, flip=False)
             img = pygame.image.load(self._get_image_path('ErrorNetwork.png')).convert_alpha()
             self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
             pygame.display.flip()
-            syslog.syslog(syslog.LOG_INFO, 'Erreur de configuration réseau')
+            logger.logger.logEvent(logger.LOG_ERROR, 'Erreur de configuration réseau')
             return False
         try:
             #Bus 001 Device 006: ID 04a9:327a Canon, Inc.
             conn = cups.Connection()
             printers = conn.getPrinters()
-            if len(printers) != 1:
-                self.showtext(u'Erreur: Imprimante non connectée!', color=(255, 0, 0), fill=True, flip=False)
+            if self.printername not in list(printers):
+                self.showtext(u'Erreur: Imprimante non connectée!',
+                              color=(255, 0, 0),
+                              fill=True,
+                              flip=False)
                 img = pygame.image.load(self._get_image_path('ErrorPrinter.png')).convert_alpha()
                 self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
                 pygame.display.flip()
-                syslog.syslog(syslog.LOG_INFO, 'Imprimante non connectee')
+                logger.logger.logEvent(logger.LOG_ERROR, 'Imprimante non connectée')
                 return False
         except RuntimeError as erreur:
             print(erreur)
-            self.showtext(u'Erreur: Erreur de connexion au serveur CUPS', color=(255, 0, 0), fill=True, flip=False)
+            self.showtext(u'Erreur: Erreur de connexion au serveur CUPS',
+                          color=(255, 0, 0),
+                          fill=True,
+                          flip=False)
             img = pygame.image.load(self._get_image_path('ErrorPrinter.png')).convert_alpha()
             self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
             pygame.display.flip()
-            syslog.syslog(syslog.LOG_INFO, 'Impossible de se connecter au serveur d\'impression')
+            logger.logger.logEvent(logger.LOG_ERROR,
+                                   'Impossible de se connecter au serveur d\'impression')
             return False
+        conn = cups.Connection()
+        printermessage = conn.getPrinters()[self.printername]['printer-state-message'].lower()
+        if not 'ready' in printermessage:
+            self.showtext(u'Erreur: Imprimante non connectée!',
+                          color=(255, 0, 0), fill=True, flip=False)
+            img = pygame.image.load(self._get_image_path('ErrorPrinter.png')).convert_alpha()
+            self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
+            pygame.display.flip()
+            logger.logger.logEvent(logger.LOG_ERROR,
+                                   'Erreur d\'impression: {}'.format(printermessage))
+            logger.logger.logStatus(printerstatus=printermessage)
+            return False
+
         return True
 
     def run(self):
@@ -194,8 +236,10 @@ class Photomaton:
             while True:
                 self.camera.close()#avoind picamera bugs
                 self.camera = picamera.PiCamera()
+                self.refreshconf()
                 self.check_erreurs()
-                self.showtext('Appuyer sur A ou B', color=self.fontcolor, offset=160-self.height/2, fill=True, flip=False)
+                self.showtext('Appuyer sur A ou B', color=self.fontcolor,
+                              offset=160-self.height/2, fill=True, flip=False)
                 img = pygame.image.load(self._get_image_path('NES.png')).convert_alpha()
                 img = pygame.transform.smoothscale(img, (int(458), int(280)))
                 self.screen.blit(img, (int(self.width/2) - 230, 250))
@@ -203,10 +247,11 @@ class Photomaton:
                 pygame.display.flip()
                 print('wait...')
                 event = pygame.event.wait()
-                if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                if event.type == pygame.QUIT or\
+                   (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                     print('À la prochaine!')
                     pygame.quit()
-                    syslog.syslog(syslog.LOG_INFO, 'Sortie à la demande de l\'utilisateur')
+                    logger.logger.logEvent(logger.LOG_INFO, 'Sortie à la demande de l\'utilisateur')
                     sys.exit(0)
                 elif event.type == pygame.JOYBUTTONDOWN:
                     print('bouton pressé:', event.button)
@@ -218,7 +263,7 @@ class Photomaton:
     @staticmethod
     def _reboot():
         print('Reboot')
-        syslog.syslog(syslog.LOG_INFO, 'Redémarrage à la demande de l\'utilisateur')
+        logger.logger.logEvent(logger.LOG_INFO, 'Redémarrage à la demande de l\'utilisateur')
         os.system('sudo reboot')
 
     def _activer_flash(self):
@@ -237,7 +282,7 @@ class Photomaton:
     @staticmethod
     def _quit():
         print('Quit')
-        syslog.syslog(syslog.LOG_INFO, 'Sortie à la demande de l\'utilisateur')
+        logger.logger.logEvent(logger.LOG_INFO, 'Sortie à la demande de l\'utilisateur')
         sys.exit(0)
 
     @staticmethod
@@ -263,11 +308,19 @@ class Photomaton:
         '''!Menu d'administration du photomaton. Déclanché par la touche start sur le menu de base
         '''
         if self.flash:
-            commands = {u'Redémarrer le photomaton': self._reboot, 'Arreter le photomaton': self._shutdown, u'Quitter le programme': self._quit, u'Annuler': None, u'Désactiver le flash': self._desactiver_flash}
+            commands = {u'Redémarrer le photomaton': self._reboot,
+                        'Arreter le photomaton': self._shutdown,
+                        u'Quitter le programme': self._quit,
+                        u'Annuler': None,
+                        u'Désactiver le flash': self._desactiver_flash}
         else:
-            commands = {u'Redémarrer le photomaton': self._reboot, 'Arreter le photomaton': self._shutdown, u'Quitter le programme': self._quit, u'Annuler': None, u'Activer le flash': self._activer_flash}
+            commands = {u'Redémarrer le photomaton': self._reboot,
+                        'Arreter le photomaton': self._shutdown,
+                        u'Quitter le programme': self._quit, u'Annuler': None,
+                        u'Activer le flash': self._activer_flash}
         arrow = pygame.image.load(self._get_image_path('arrow.png')).convert_alpha()
-        arrow = pygame.transform.smoothscale(arrow, (int(arrow.get_width()/5), int(arrow.get_height()/5)))
+        arrow = pygame.transform.smoothscale(arrow, (int(arrow.get_width()/5),
+                                                     int(arrow.get_height()/5)))
         current = list(commands).index(u'Annuler')
         #Boucle de contrôle
         self.background()
@@ -279,7 +332,9 @@ class Photomaton:
                 img = self.font.render(text, 1, (255, 255, 255))
                 self.screen.blit(img, (arrow.get_width() + 50, yoffset))
                 if i == current:
-                    self.screen.blit(arrow, (10, yoffset + int(img.get_height() / 2 - arrow.get_height() / 2)))
+                    self.screen.blit(arrow,
+                                     (10, yoffset +
+                                      int(img.get_height() / 2 - arrow.get_height() / 2)))
                 yoffset += 20 + img.get_height()
             pygame.display.flip()
             #Traitement des entrées utilisateur
@@ -289,7 +344,7 @@ class Photomaton:
                 if text == u'Annuler':
                     return
                 commands[text]()
-                if 'le flash' in text:
+                if 'flash' in text:
                     return
             elif bouton == JOYBUTTONUP:
                 current -= 1
@@ -302,7 +357,8 @@ class Photomaton:
     def background(self):
         '''!Selection du fond d'écran
         '''
-        img = pygame.image.load(os.path.join(self.curdir, self.conf.get('MENU', 'background'))).convert()
+        img = pygame.image.load(os.path.join(CURRDIR,
+                                             self.conf.get('MENU', 'background'))).convert()
         self.screen.blit(img, (0, 0))
 
     def prendre_photos(self):
@@ -315,7 +371,9 @@ class Photomaton:
             self.background()
             pygame.display.flip()
             #Affiche le compte à rebours et l'aperçu
-            self.screen.blit(self.font.render('photo {} sur {}'.format(photonb + 1, self.nbphotos), 2, self.fontcolor), (0, 0))
+            self.screen.blit(self.font.render('photo {} sur {}'.format(photonb + 1,
+                                                                       self.nbphotos),
+                                              2, self.fontcolor), (0, 0))
             while self.sleeptime - int(time.time()-time1) > 0:
                 print('capture photo:', photonb)
                 counter = self.sleeptime - int(time.time()-time1)
@@ -336,26 +394,31 @@ class Photomaton:
             time.sleep(2)
         #Pour patienter pendant le traitement de l'image
         self.background()
-        img = pygame.image.load(self._get_image_path('coyote_rocket_by_mreiof-d5va4sl.jpg')).convert_alpha()
+        img = pygame.image.load(self._get_image_path('coyote_rocket_by_mreiof-d5va4sl.jpg')
+                               ).convert_alpha()
         img = pygame.transform.smoothscale(img, (self.screen.get_width(), self.screen.get_height()))
         self.screen.blit(img, (0, 0))
-        del img
-        self.showtext(u'Génération en cours, patientez!!', color=self.fontcolor, fill=False, flip=True, scale=3)
+        del img#Memory optimisation
+        self.showtext(u'Génération en cours, patientez!!',
+                      color=self.fontcolor, fill=False, flip=True, scale=3)
         #Photo rendering. Voir render.py
         generator = render.Render()
         filename = generator.gen(photolist)
-        del photolist
-        del generator
+        del photolist#Memory optimisation
+        del generator#Memory optimisation
         #Ecran d'impression
         self.background()
         img = pygame.image.load(filename).convert()
-        img = pygame.transform.smoothscale(img, (int(img.get_width() * (float(self.height)/img.get_height())), self.height))
+        img = pygame.transform.smoothscale(img,
+                                           (int(img.get_width() *
+                                                (float(self.height)/img.get_height())),
+                                            self.height))
         self.screen.blit(img, (int(self.screen.get_width() / 2 - img.get_width() / 2), 0))
         self.showtext('Valider pour imprimer', color=self.fontcolor, fill=False, flip=False)
         #Afficher le qrcode à droite
         img = pygame.image.load(os.path.join(self.temppath, 'qrcode.png')).convert()
-        img = pygame.transform.smoothscale(img, (166, 166))
-        self.screen.blit(img, (self.screen.get_width() - img.get_width(), 0))
+        img = pygame.transform.smoothscale(img, (300, 300))
+        self.screen.blit(img, (self.screen.get_width() - img.get_width() - 20, 10))
         #Images imprimer OUI/NON FLECHE??
         img = pygame.image.load(self._get_image_path('KO.png')).convert_alpha()
         img = pygame.transform.smoothscale(img, (int(self.width/4 - 14), int(self.height/4 + 20)))
@@ -381,16 +444,18 @@ class Photomaton:
         @param filename Le fichier à imprimer
         '''
         self.check_erreurs()
-        syslog.syslog(syslog.LOG_INFO, 'Impression')
+        conn = cups.Connection()
+        logger.logger.logEvent(logger.LOG_INFO, 'Impression')
+        logger.logger.logStatus('Impression', 1)
         #impression sauvage
         self.showtext('Impression en cours..', color=self.fontcolor, flip=False, fill=True)
         img = pygame.image.load(os.path.join(self.temppath, 'qrcode.png')).convert()
-        img = pygame.transform.smoothscale(img, (200, 200))
-        self.screen.blit(img, (0, 0))
+        img = pygame.transform.smoothscale(img, (300, 300))
+        self.screen.blit(img, (10, 10))
         pygame.display.flip()
-        conn = cups.Connection()
         print('impression demandée!!')
-        conn.printFile(list(conn.getPrinters())[0], filename, title='IMG', options={'StpBorderless': 'True'})
+        #TODO: indiquer le hostspot
+        conn.printFile(filename, title='IMG', options={'StpBorderless': 'True'})
         #temporisation avec barre de chargement
         for i in range(self.printtime * 10, 0, -1):
             #TODO -> cups status guttenprint
@@ -399,12 +464,13 @@ class Photomaton:
             pygame.display.flip()
             time.sleep(.1)
         #attente d'action utilisateur
-        #self.showtext('Appuyer sur une touche...', color=self.fontcolor, offset=100, fill=False)
-        #pygame.event.clear()
-        #pygame.event.wait()
+        self.showtext('Appuyer sur une touche...', color=self.fontcolor, offset=100, fill=False)
+        pygame.event.clear()
+        pygame.event.wait()
         #nettoyage
         #Vide la file d'impression. Evite les bugs en cas de fin de papier ou remplacement cartouche
-        conn.cancelAllJobs(list(conn.getPrinters())[0])
+        conn.cancelAllJobs(conn.getPrinters()[self.printername])
+        conn.enablePrinter(conn.getPrinters()[self.printername])
 
     def showtext(self, text, color=(255, 255, 255), fill=True, offset=0, flip=True, scale=1):
         '''!Affiche un texte sur la surface
@@ -423,15 +489,6 @@ class Photomaton:
         if flip: pygame.display.flip()
 
 if __name__ == '__main__':
-    syslog.syslog(syslog.LOG_INFO, 'Demarrage du photomaton')
+    logger.logger.logEvent(logger.LOG_INFO, 'Demarrage du photomaton')
     while True:
         Photomaton()
-    '''while True:
-        try:
-            syslog.syslog(syslog.LOG_INFO, 'Lancement')
-            Photomaton()
-        except Exception as error:
-            print('Erreur:', str(error))
-            syslog.syslog('Erreur: ' + str(error))
-        time.sleep(1)
-'''
