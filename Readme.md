@@ -55,7 +55,7 @@ INSTALL:
 2 Installer le socle logiciel
 
 ```
-sudo "$(curl https://raw.githubusercontent.com/pierrehpezier/photobooth/master/install_stript.sh)"
+wget https://raw.githubusercontent.com/pierrehpezier/photobooth/master/install_script.sh && sudo bash install_script.sh
 ```
 4 Configurer l'imprimante
 

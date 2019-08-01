@@ -19,6 +19,8 @@ cd /home/pi/
 sudo -u pi git clone --depth=1 https://github.com/pierrehpezier/photobooth
 sudo -u pi pypy3 -m pip install -r photobooth/src/requirements.txt --user
 sudo -u pi python3 -m pip install -r photobooth/src/requirements.txt --user
+sudo -u pi pypy3 -m pip install -r photobooth/server/requirements.txt --user
+sudo -u pi python3 -m pip install -r photobooth/server/requirements.txt --user
 git clone --depth=1 https://github.com/mikelothar/show-all-images-in-a-folder-with-php.git
 cp -r show-all-images-in-a-folder-with-php/* /var/www/html/
 chown -R www-data:www-data /var/www/html
@@ -45,8 +47,9 @@ then
 else
   sed -i -e 's/^gpu_mem=64/gpu_mem=128/' /boot/config.txt
 fi
+
 #start photomaton at reboot
-sudo -u pi cat << EOF >> /lib/systemd/system/photobooth.service
+cat << EOF > /lib/systemd/system/photobooth.service
 [Service]
 Type=simple
 ExecStart=/home/pi/photobooth/src/photomaton
@@ -58,7 +61,8 @@ SuccessExitStatus=0
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo -u pi cat << EOF >> /lib/systemd/system/redis.service
+
+cat << EOF > /lib/systemd/system/redis.service
 [Service]
 Type=simple
 ExecStart=/usr/bin/redis-server
@@ -71,8 +75,22 @@ SuccessExitStatus=0
 WantedBy=multi-user.target
 EOF
 
+cat << EOF > /lib/systemd/system/adminserver.service
+[Service]
+Type=simple
+ExecStart=/usr/bin/gunicorn-3 --pythonpath /home/pi/photobooth/server/ server
+User=pi
+Restart=on-failure
+TimeoutStopSec=3
+SuccessExitStatus=0
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl enable photobooth
 systemctl enable redis
+systemctl enable adminserver
 #enable printer
 adduser pi lpadmin
 systemctl enable cups
