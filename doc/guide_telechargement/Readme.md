@@ -3,11 +3,11 @@ Téléchargement des photos
 
 1 Se connecter au wifi <b>"photomaton"</b> paramètres → Wifi → photomation
 
-![hotspot](images/1-wifi.png)
+![hotspot](images/1-wifi.png =250x)
 
 2 Installer un logiciel de lecture de qrcode tel que <b>"QR code reader"</b> pour android ou iOS.
 
-![qrcode](images/2-qrcode.png)
+![qrcode](images/2-qrcode.png =250x)
 
 3 Scanner le qrcode sur la borne au moment de l’impression
 

@@ -1,7 +1,7 @@
 photomaton
 -----------
 
-![overview](doc/images/overview.jpg)
+![overview](images/overview.jpg =250x)
 
 Description
 ===========
@@ -22,13 +22,13 @@ Références vers la documentation:
 Screenshots
 ===========
 
-![accueil](images/accueil.png)
+![accueil](images/accueil.png =250x)
 
-![printchoice](images/printchoice.png)
+![printchoice](images/printchoice.png =250x)
 
-![printing](images/printing.png)
+![printing](images/printing.png =250x)
 
-![preview](images/pic_preview.jpg)
+![preview](images/pic_preview.jpg =250x)
 
 Hard & soft
 ===========
@@ -61,15 +61,15 @@ sudo "$(curl https://raw.githubusercontent.com/pierrehpezier/photobooth/master/i
 
 Se connecter à http://localhost:631/
 
-![overview](images/cups_1.png)
+![overview](images/cups_1.png =250x)
 
-![overview](images/cups_2.png)
+![overview](images/cups_2.png =250x)
 
-![overview](images/cups_3.png)
+![overview](images/cups_3.png =250x)
 
-![overview](images/cups_4.png)
+![overview](images/cups_4.png =250x)
 
-![overview](images/cups_5.png)
+![overview](images/cups_5.png =250x)
 
 5 Editer le fichier de configuration
 
