@@ -16,12 +16,12 @@ import flask_sse
 import flask_sslify
 import psutil
 
-APP = flask.Flask(__name__)
-APP.config['MAX_CONTENT_LENGTH'] = 9999999
-APP.secret_key = os.urandom(512)
-APP.config["REDIS_URL"] = "redis://localhost:6379"
-APP.register_blueprint(flask_sse.sse, url_prefix='/stream')
-flask_sslify.SSLify(APP, permanent=True)
+application = flask.Flask(__name__)
+application.config['MAX_CONTENT_LENGTH'] = 9999999
+application.secret_key = os.urandom(512)
+application.config["REDIS_URL"] = "redis://localhost:6379"
+application.register_blueprint(flask_sse.sse, url_prefix='/stream')
+flask_sslify.SSLify(application, permanent=True)
 
 CURRPATH = os.path.dirname(os.path.realpath(__file__))
 NOAUTH = False
@@ -75,7 +75,7 @@ def require_admin(func):
         return flask.redirect('/login')
     return wrapper
 
-@APP.route('/login', methods=['GET', 'POST'])
+@application.route('/login', methods=['GET', 'POST'])
 def login():
     '''
     Password login
@@ -98,7 +98,7 @@ def login():
     return flask.render_template('auth.html', status=None)
 
 
-@APP.route('/logout', methods=['GET', 'POST'])
+@application.route('/logout', methods=['GET', 'POST'])
 @require_admin
 def logout():
     '''
@@ -108,7 +108,7 @@ def logout():
         flask.session['username'] = None
     return flask.redirect('/')
 
-@APP.route('/', methods=['GET', 'POST'])
+@application.route('/', methods=['GET', 'POST'])
 @require_admin
 def index():
     '''
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     ARGS = parse_command_line()
     NOAUTH = ARGS.noauth
     if ARGS.nossl:
-        APP.run(threaded=True, host=ARGS.host, port=ARGS.port, debug=True)
+        application.run(threaded=True, host=ARGS.host, port=ARGS.port, debug=False)
     else:
         SSLCONTEXT = (ARGS.cert, ARGS.key)
-        APP.run(threaded=True, host=ARGS.host, port=ARGS.port, debug=True, ssl_context=SSLCONTEXT)
+        application.run(threaded=True, host=ARGS.host, port=ARGS.port, debug=False, ssl_context=SSLCONTEXT)

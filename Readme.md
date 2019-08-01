@@ -37,6 +37,7 @@ Hard & soft
 |--------|--------------|--------------|
 |Raspberry pi | 2B+ | 30€ |
 |picamera |v1.2| 20€ |
+|Manette NES USB|DragonRise|7€|
 |Ecran pour raspberry 10''| | |
 |Imprimante Selphy|cp910|100€|
 |Relais optocoupleur|SODIAL(R) 5V MODULE 2 CANAUX POUR ARDUINO PIC ARM AVR DSP|1€|

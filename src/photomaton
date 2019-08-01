@@ -25,6 +25,8 @@ JOYBUTTONRIGHT = 13
 JOYBUTTONSELECT = 8
 JOYBUTTONSTART = 9
 
+PRINTER_STATE_IDLE = 3
+
 CURRDIR = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -64,8 +66,8 @@ class Photomaton:
         self.check_erreurs(check_cam=True)
         #init printer
         conn = cups.Connection()
-        conn.cancelAllJobs(conn.getPrinters()[self.printername])
-        conn.enablePrinter(conn.getPrinters()[self.printername])
+        conn.cancelAllJobs(self.printername)
+        conn.enablePrinter(self.printername)
         self.camera = picamera.PiCamera()
         pygame.joystick.Joystick(0).init()
         self.run()
@@ -209,18 +211,11 @@ class Photomaton:
                                    'Impossible de se connecter au serveur d\'impression')
             return False
         conn = cups.Connection()
-        printermessage = conn.getPrinters()[self.printername]['printer-state-message'].lower()
-        if not 'ready' in printermessage:
-            self.showtext(u'Erreur: Imprimante non connectée!',
-                          color=(255, 0, 0), fill=True, flip=False)
-            img = pygame.image.load(self._get_image_path('ErrorPrinter.png')).convert_alpha()
-            self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
-            pygame.display.flip()
-            logger.logger.logEvent(logger.LOG_ERROR,
-                                   'Erreur d\'impression: {}'.format(printermessage))
-            logger.logger.logStatus(printerstatus=printermessage)
-            return False
-
+        if conn.getPrinters()[self.printername]['printer-state'] == 3:
+            printerstatus = 'Idle'
+        else:
+            printerstatus = conn.getPrinters()[self.printername]['printer-state-message'].lower()
+        logger.logger.logStatus(printerstatus=printerstatus)
         return True
 
     def run(self):
@@ -233,18 +228,21 @@ class Photomaton:
         if self.testmode:
             self.prendre_photos()
         else:
+            redraw = True
             while True:
-                self.camera.close()#avoind picamera bugs
-                self.camera = picamera.PiCamera()
-                self.refreshconf()
-                self.check_erreurs()
-                self.showtext('Appuyer sur A ou B', color=self.fontcolor,
-                              offset=160-self.height/2, fill=True, flip=False)
-                img = pygame.image.load(self._get_image_path('NES.png')).convert_alpha()
-                img = pygame.transform.smoothscale(img, (int(458), int(280)))
-                self.screen.blit(img, (int(self.width/2) - 230, 250))
-                pygame.event.clear()
-                pygame.display.flip()
+                if redraw:
+                    self.camera.close()#avoind picamera bugs
+                    self.camera = picamera.PiCamera()
+                    self.refreshconf()
+                    self.check_erreurs()
+                    self.showtext('Appuyer sur A ou B', color=self.fontcolor,
+                                  offset=160-self.height/2, fill=True, flip=False)
+                    img = pygame.image.load(self._get_image_path('NES.png')).convert_alpha()
+                    img = pygame.transform.smoothscale(img, (int(458), int(280)))
+                    self.screen.blit(img, (int(self.width/2) - 230, 250))
+                    pygame.event.clear()
+                    pygame.display.flip()
+                    redraw = False
                 print('wait...')
                 event = pygame.event.wait()
                 if event.type == pygame.QUIT or\
@@ -259,6 +257,7 @@ class Photomaton:
                         self.prendre_photos()
                     elif event.button == JOYBUTTONSTART:
                         self.admin_menu()
+                    redraw = True
 
     @staticmethod
     def _reboot():
@@ -362,7 +361,7 @@ class Photomaton:
         self.screen.blit(img, (0, 0))
 
     def prendre_photos(self):
-        '''!Prendre une série de self.nbphotos photos et demande une impression
+        '''!Prendre une série de "self.nbphotos" photos et demande une impression
         '''
         self.check_erreurs()
         photolist = []
@@ -439,12 +438,32 @@ class Photomaton:
                     self.imprimer(filename)
                 return
 
+    def checkprinterstatus(self):
+        conn = cups.Connection()
+        conn.cancelAllJobs(self.printername)
+        conn.enablePrinter(self.printername)
+        if conn.getPrinters()[self.printername]['printer-state'] == PRINTER_STATE_IDLE: return True
+        printermessage = conn.getPrinters()[self.printername]['printer-state-message'].lower()
+        self.showtext(u'Erreur: {}'.format(printermessage),
+                      color=(255, 0, 0),
+                      fill=True,
+                      flip=False)
+        self.showtext('Appuyer sur une touche poour continuer sans imprimer',
+                      color=self.fontcolor, offset=100, fill=False)
+        img = pygame.image.load(self._get_image_path('ErrorPrinter.png')).convert_alpha()
+        self.screen.blit(img, (self.screen.get_width() - img.get_width() - 10, 10))
+        pygame.display.flip()
+        while conn.getPrinters()[self.printername]['printer-state'] != PRINTER_STATE_IDLE:
+            if pygame.event.wait().type == pygame.JOYBUTTONDOWN:
+                return False
+        return True
+
     def imprimer(self, filename):
         '''!Envoie la photo à l'imprimante. Génère un QRCode.
         @param filename Le fichier à imprimer
         '''
         self.check_erreurs()
-        conn = cups.Connection()
+        if not self.checkprinterstatus(): return
         logger.logger.logEvent(logger.LOG_INFO, 'Impression')
         logger.logger.logStatus('Impression', 1)
         #impression sauvage
@@ -455,12 +474,14 @@ class Photomaton:
         pygame.display.flip()
         print('impression demandée!!')
         #TODO: indiquer le hostspot
+        conn = cups.Connection()
         conn.printFile(filename, title='IMG', options={'StpBorderless': 'True'})
         #temporisation avec barre de chargement
         for i in range(self.printtime * 10, 0, -1):
             #TODO -> cups status guttenprint
             progress = (self.printtime * 10.0 - i)/(self.printtime * 10)
-            pygame.draw.rect(self.screen, (255, 0, 0), pygame.Rect(0, 400, int((self.width - 20) * progress), 30))
+            pygame.draw.rect(self.screen, (255, 0, 0),
+                             pygame.Rect(0, 400, int((self.width - 20) * progress), 30))
             pygame.display.flip()
             time.sleep(.1)
         #attente d'action utilisateur
@@ -469,8 +490,8 @@ class Photomaton:
         pygame.event.wait()
         #nettoyage
         #Vide la file d'impression. Evite les bugs en cas de fin de papier ou remplacement cartouche
-        conn.cancelAllJobs(conn.getPrinters()[self.printername])
-        conn.enablePrinter(conn.getPrinters()[self.printername])
+        conn.cancelAllJobs(self.printername)
+        conn.enablePrinter(self.printername)
 
     def showtext(self, text, color=(255, 255, 255), fill=True, offset=0, flip=True, scale=1):
         '''!Affiche un texte sur la surface

@@ -49,4 +49,4 @@ class logger:
         open(os.path.join(CURRDIR,
                           '..',
                           'log',
-                          'logs.txt'), 'a+').writeline('{} {}'.join(LOGDICT[loglevel], event))
+                          'logs.txt'), 'a+').write('{} {}\n'.format(LOGDICT[loglevel], event))
