@@ -1,3 +1,8 @@
+photomaton
+-----------
+
+![overview](doc/images/overview.jpg)
+
 Description
 ===========
 
@@ -8,6 +13,16 @@ Une série de 6 photos sont prises et assemblées en une seule. L'utilisateur pe
 voir:
   * doc/Guide de téléchagement.pdf
   * doc/Guide d'utilisation du photomaton.pdf
+
+Screenshots
+===========
+
+![accueil](doc/screenshots/accueil.png)
+
+![printchoice](doc/screenshots/printchoice.png)
+
+![printing](doc/screenshots/printing.png)
+
 
 photomaton
 ==========
