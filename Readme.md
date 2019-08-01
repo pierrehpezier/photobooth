@@ -1,7 +1,7 @@
 photomaton
 -----------
 
-![overview](images/overview.jpg =250x)
+![overview](images/overview.jpg | width=100)
 
 Description
 ===========
