@@ -10,39 +10,42 @@ Le photomaton utilisé pour mon mariage. Ce photomaton permet d'imprimer des pho
 
 Une série de 6 photos sont prises et assemblées en une seule. L'utilisateur peut choisir d'imprimer ou non la photo. Elle est téléchargeable via un QRCode à tout moment via un point d'accès Wi-Fi ouvert par le photomaton.
 
-voir:
-  * doc/Guide de téléchagement.pdf
-  * doc/Guide d'utilisation du photomaton.pdf
+Références vers la documentation:
+
+|Guide|Description|
+|-----|-----------|
+|doc/guide_telechargment|Télécharger les photos sur un smartphone|
+|doc/guide_utilisation|Utilisation du photomaton|
+|doc/hardware|Fabrication du photomaton|
+
 
 Screenshots
 ===========
 
-![accueil](doc/screenshots/accueil.png)
+![accueil](images/accueil.png)
 
-![printchoice](doc/screenshots/printchoice.png)
+![printchoice](images/printchoice.png)
 
-![printing](doc/screenshots/printing.png)
+![printing](images/printing.png)
 
-![preview](doc/images/pic_preview.jpg)
+![preview](images/pic_preview.jpg)
 
-photomaton
-==========
+Hard & soft
+===========
 
-Testé sur:
-----------
+|matériel|Version testée|Prix indicatif|
+|--------|--------------|--------------|
+|Raspberry pi | 2B+ | 30€ |
+|picamera |v1.2| 20€ |
+|Ecran pour raspberry 10''| | |
+|Imprimante Selphy|cp910|100€|
+|Relais optocoupleur|SODIAL(R) 5V MODULE 2 CANAUX POUR ARDUINO PIC ARM AVR DSP|1€|
 
- * Raspberry pi B
- * Picaméra v1.2
- * Ecran pour raspberry 10"
- * Imprimante Selphy cp910
- * Relais SODIAL(R) 5V MODULE 2 CANAUX POUR ARDUINO PIC ARM AVR DSPDes ajustement sur la résolution des images est à prévoir si le matériel est différent.
+ Des ajustement sur la résolution des images (suivant la picaméra) ou le rendu (suvant l'écran) est à prévoir si le matériel est différent.
 
-avec:
------
-
- * Raspbian Buster with desktop and recommended software (http://director.downloads.raspberrypi.org/raspbian_full/images/raspbian_full-2019-07-12/2019-07-10-raspbian-buster-full.zip)
- * LXDE
- * python2
+|Logiciel|Version testée|URL|
+|--------|--------------|---|
+|Raspbian|Buster with desktop and recommended software|http://director.downloads.raspberrypi.org/raspbian_full/images/raspbian_full-2019-07-12/2019-07-10-raspbian-buster-full.zip|
 
 INSTALL:
 ========
@@ -54,24 +57,28 @@ INSTALL:
 ```
 sudo "$(curl https://raw.githubusercontent.com/pierrehpezier/photobooth/master/install_stript.sh)"
 ```
-3 Changer la configuration graphique:
-
-```sudo raspi-config```
-select: Advanced options -> Memory split -> and set at least 128MB
-
 4 Configurer l'imprimante
 
 Se connecter à http://localhost:631/
 
-![overview](doc/images/cups_1.png)
+![overview](images/cups_1.png)
 
-![overview](doc/images/cups_2.png)
+![overview](images/cups_2.png)
 
-![overview](doc/images/cups_3.png)
+![overview](images/cups_3.png)
 
-![overview](doc/images/cups_4.png)
+![overview](images/cups_4.png)
 
-![overview](doc/images/cups_5.png)
+![overview](images/cups_5.png)
+
+5 Editer le fichier de configuration
+
+```
+vim src/photomaton.conf
+```
+
+6 Ajout du hot spot Wi-Fi
+
 
 5 Redémarrer
 

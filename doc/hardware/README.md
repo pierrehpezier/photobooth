@@ -6,6 +6,6 @@ Frame
 GPIO
 ====
 
-![Cablage](../images/GPIO_OUTPUT.jpg)
+![Cablage](images/GPIO_OUTPUT.jpg)
 
-![Optocoupleur](../images/power.png)
+![Optocoupleur](images/power.png)

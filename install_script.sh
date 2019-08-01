@@ -70,6 +70,7 @@ SuccessExitStatus=0
 [Install]
 WantedBy=multi-user.target
 EOF
+
 systemctl enable photobooth
 systemctl enable redis
 #enable printer
