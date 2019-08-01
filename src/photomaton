@@ -439,6 +439,9 @@ class Photomaton:
                 return
 
     def checkprinterstatus(self):
+        '''!Check la dicponibilité de l'imprimante
+        @return True if printer is idle, False if not
+        '''
         conn = cups.Connection()
         conn.cancelAllJobs(self.printername)
         conn.enablePrinter(self.printername)
@@ -468,12 +471,13 @@ class Photomaton:
         logger.logger.logStatus('Impression', 1)
         #impression sauvage
         self.showtext('Impression en cours..', color=self.fontcolor, flip=False, fill=True)
+        self.showtext('Télécharger avec le WiFi photomaton',
+                      color=self.fontcolor, offset=100, fill=False)
         img = pygame.image.load(os.path.join(self.temppath, 'qrcode.png')).convert()
         img = pygame.transform.smoothscale(img, (300, 300))
         self.screen.blit(img, (10, 10))
         pygame.display.flip()
         print('impression demandée!!')
-        #TODO: indiquer le hostspot
         conn = cups.Connection()
         conn.printFile(filename, title='IMG', options={'StpBorderless': 'True'})
         #temporisation avec barre de chargement
@@ -485,10 +489,9 @@ class Photomaton:
             pygame.display.flip()
             time.sleep(.1)
         #attente d'action utilisateur
-        self.showtext('Appuyer sur une touche...', color=self.fontcolor, offset=100, fill=False)
+        self.showtext('Appuyer sur une touche...', color=self.fontcolor, offset=200, fill=False)
         pygame.event.clear()
         pygame.event.wait()
-        #nettoyage
         #Vide la file d'impression. Evite les bugs en cas de fin de papier ou remplacement cartouche
         conn.cancelAllJobs(self.printername)
         conn.enablePrinter(self.printername)
