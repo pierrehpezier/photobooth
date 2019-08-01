@@ -34,7 +34,7 @@ class backgroundexec(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
     def run(self):
-        with APP.app_context():
+        with application.app_context():
             while True:
                 time.sleep(5)
                 paramlist = ['printerstatus', 'printercount', 'internalerror']
