@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+import os
+import json
+import hashlib
+import time
+import threading
+import functools
+import binascii
+import argparse
+import flask
+import flask_sse
+import flask_sslify
+
+
+app = flask.Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 9999999
+app.secret_key = os.urandom(512)
+app.config["REDIS_URL"] = "redis://localhost:6379"
+app.register_blueprint(flask_sse.sse, url_prefix='/stream')
+flask_sslify.SSLify(app, permanent=True)
+
+CURRPATH = os.path.dirname(os.path.realpath(__file__))
+NOAUTH = False
+
+class backgroundExec(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        with app.app_context():
+            counter = 0
+            while True:
+                time.sleep(1)
+                flask_sse.sse.publish({"message": "log entry test"}, type='logentry')
+                flask_sse.sse.publish({"message": ["ok", "ko"][counter%2]}, type='status')
+                counter += 1
+        '''with app.app_context():
+            time.sleep(1)
+            p = subprocess.Popen(self.cmd, shell=True, bufsize=4096, stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
+            for line in iter(p.stdout.readline, b''):
+                sse.publish({"message": line.strip()}, type='progress')
+            p.stdout.close()
+            p.wait()
+            sse.publish({"message": "<h1>Done</h1>"}, type='progress')'''
+
+def require_admin(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global NOAUTH
+        if NOAUTH:
+            flask.session['username'] = 'admin'
+            return func(*args, **kwargs)
+        currpath = os.path.dirname(os.path.realpath(__file__))
+        logins = list(json.loads(open(os.path.join(currpath, 'password.json')).read()))
+        if 'username' in flask.session and flask.session['username'] == 'admin':
+            return func(*args, **kwargs)
+        if 'username' in flask.session and flask.session['username'] in logins:
+            return abort(500)
+        else:
+            return flask.redirect('/login')
+    return wrapper
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    credentials = json.loads(open(os.path.join(CURRPATH, 'password.json')).read())
+    if flask.request.method == 'POST':
+        user = flask.request.form['username']
+        if user in credentials:
+            salt = bytes(credentials[user]['salt'], 'UTF-8')
+            userhash = credentials[user]['hash']
+            dbhash = str(binascii.hexlify(hashlib.pbkdf2_hmac('sha512',
+            bytes(flask.request.form['password'], 'UTF-8'), salt, 1000000)), 'UTF-8')
+            print(dbhash, userhash)
+            if dbhash == userhash:
+                flask.session['username'] = user
+                print ('OK')
+                return flask.redirect('/')
+    return flask.render_template('auth.html', status=None)
+
+
+@app.route('/logout', methods=['GET', 'POST'])
+@require_admin
+def logout():
+    if 'username' in session:
+        #Logger.LogInfo('User: {} disconnected'.format(session['username']))
+        flask.session['username'] = None
+    return flask.redirect('/')
+
+@app.route('/', methods=['GET', 'POST'])
+@require_admin
+def index():
+    thread_1 = backgroundExec()
+    thread_1.start()
+    return flask.render_template('mainmenu.html', status=None)
+
+def parse_command_line():
+    parser = argparse.ArgumentParser(description='Launch server (Flask)')
+    parser.add_argument('--host', help='Host Adress to listen to', default="0.0.0.0")
+    parser.add_argument('--port', help='Port Adress to listen to', default=4443)
+    parser.add_argument('--nossl', help="Service doesn't use SSL", action="store_true")
+    parser.add_argument('--noauth', help="Disable auth", action="store_true")
+    parser.add_argument('--cert', help='Specific certificate to use for SSL', default=os.path.join(CURRPATH, "cert.pem"))
+    parser.add_argument('--key', help='Specific key to use for SSL', default=os.path.join(CURRPATH, "key.pem"))
+    return parser.parse_args()
+
+if __name__ == '__main__':
+    args = parse_command_line()
+    NOAUTH = args.noauth
+    if args.nossl:
+        app.run(threaded=True, host=args.host, port=args.port, debug=True)
+    else:
+        ssl_context=(args.cert, args.key)
+        app.run(threaded=True, host=args.host, port=args.port, debug=True, ssl_context=ssl_context)

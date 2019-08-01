@@ -49,25 +49,36 @@ INSTALL:
 1 Télécharger et installer raspbian [Version testée](http://director.downloads.raspberrypi.org/raspbian_full/images/raspbian_full-2019-07-12/2019-07-10-raspbian-buster-full.zip)
 
 2 Installer le socle logiciel
+
 ```
 sudo "$(curl https://raw.githubusercontent.com/pierrehpezier/photobooth/master/install_stript.sh)"
 ```
-3 Configurer l'imprimante
+3 Changer la configuration graphique:
+
+```sudo raspi-config```
+select: Advanced options -> Memory split -> and set at least 128MB
+
+4 Configurer l'imprimante
+
 Se connecter à http://localhost:631/
 
+![overview](doc/images/cups_1.png)
 
-FIXME:
-======
+![overview](doc/images/cups_2.png)
 
-Problème de retour imprimante. Aucune information sur l'alimentation papier et le niveau encre. Utiliser la dernière version de gutenprint.
+![overview](doc/images/cups_3.png)
 
+![overview](doc/images/cups_4.png)
+
+![overview](doc/images/cups_5.png)
+
+5 Redémarrer
+
+```
+sudo reboot
+```
 
 TODO:
 =====
 
 Translate to english
-Convert to python 3
-
-
-sudo raspi-config
-select: Advanced options -> Memory split -> and set at least 128MB

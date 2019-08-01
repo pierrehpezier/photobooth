@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>{{UUID}}</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->
+	<link rel="icon" type="image/png" href="images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fonts/font-awesome-4.7.0/css/font-awesome.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/animate/animate.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/select2/select2.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/perfect-scrollbar/perfect-scrollbar.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/util.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/btn.css') }}">
+<!--===============================================================================================-->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='buttontemplate/vendor/bootstrap/css/bootstrap.min.css') }}">
+
+</head>
+<body>
+<br/><br/><br/><br/>
+<div id="status">
+aaa<br/>
+</div>
+<br/>
+<div class="inner">
+</div>
+<table id="logtable">
+  <tr>
+  </tr>
+</table>
+<br>
+aaa<br/>
+
+<script>
+  var counter = 0;
+  var source = new EventSource("{{ url_for('sse.stream') }}");
+  source.addEventListener('logentry', function(event) {
+      var row = document.getElementById("logtable").insertRow(0);
+      var cell0 = row.insertCell(0);
+      var cell1 = row.insertCell(1);
+      cell0.innerHTML = counter.toString();
+      cell1.innerHTML = JSON.parse(event.data).message;
+      counter++;
+  }, false);
+  source.addEventListener('status', function(event) {
+    var message = JSON.parse(event.data).message;
+    var elem = document.getElementById("status");
+    elem.innerHTML = message;
+  }, false);
+  //document.body.appendTo(".inner");
+  //document.body.innerHTML += data.message + '<br>';
+  //document.getElementById( 'bottom' ).scrollIntoView();
+  //var data = JSON.parse(event.data);
+	/*source.addEventListener('link', function(event) {
+  	 document.body.innerHTML += '<a href="' + data.message + '">Download archive</a><br>';
+  }, false);
+  source.addEventListener('error', function(event) {
+  	 alert("Failed to connect to event stream. Is Redis running?");
+  }, false);*/
+</script>
+
+<!--
+<a href="/list"><-Return to list</a><br/>
+<h1>Single actions</h1><br/>
+<table>
+<tr><th>
+<a href="/actions/{{UUID}}/screenshot/" class="button">Take screenshot</a><br/><br/>
+</th><th><a href="/actions/{{UUID}}/START_STOP_KEYLOGGER/" class="button">Start/Stop keylogger</a><br/><br/>
+</th><th><a href="/actions/{{UUID}}/get_drives/" class="button">Get_Drives</a><br/><br/>
+</th></tr>
+<tr><th><a href="/actions/{{UUID}}/DUMP_CREDS/" class="button">Dump Credentials</a><br/><br/>
+</th><th><a href="/actions/{{UUID}}/get_env/" class="button">Get env</a><br/><br/>
+</th><th><a href=/history/{{UUID}} class="button">History</a><br/><br/>
+</th><th><br/><br/>
+</th></tr>
+<tr><th><a href="/actions/{{UUID}}/GET_VERSION/" class="button">Get Version</a><br/><br/>
+</th><th><a href="/actions/{{UUID}}/HELP/" class="button">HELP</a><br/><br/>
+</th><th><a href="/actions/{{UUID}}/EXIT/" class="button">EXIT</a><br/><br/>
+</th></tr>
+<tr><th><a href="/actions/{{UUID}}/INSTALL/" class="button">Install</a><br/><br/>
+</th><th><a href="/actions/{{UUID}}/UNINSTALL/" class="button">Uninstall</a><br/><br/>
+</th><th><a href="/actions/{{UUID}}/UPDATE/" class="button">Update</a><br/><br/>
+</th></tr>
+</table>
+-->
+
+<!--
+<a href=/screenshot/{{UUID}}>crappy_scan</a><br/>
+if scanner == 1:
+		BDDConnector.Addcmd(UUID, {'SUBCOMMAND': 'CRAPPY_SCANPROCESSES', 'LOGFILE': logfilename,
+															 'DUMPFILE': dumpfilename, 'LIMIT': filelimit})
+elif scanner == 2:
+		path = self.choose('Filetoscan')
+		BDDConnector.Addcmd(UUID, {'SUBCOMMAND': 'CRAPPY_SCANDIR', 'LOGFILE': logfilename,
+																			'DUMPFILE': dumpfilename, 'LIMIT': filelimit, 'PATH': path})
+-->
+
+<script src="{{ url_for('static', filename='buttontemplate/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/vendor/animsition/js/animsition.min.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/vendor/bootstrap/js/popper.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/vendor/select2/select2.min.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/vendor/daterangepicker/moment.min.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/vendor/daterangepicker/daterangepicker.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/vendor/countdowntime/countdowntime.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/vendor/noui/nouislider.min.js') }}"></script>
+<script src="{{ url_for('static', filename='buttontemplate/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/popper.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/select2/select2.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>
