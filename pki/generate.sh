@@ -7,7 +7,7 @@ Ile de France
 Paris
 pierrehpezier
 
-github.com
+192.168.2.198
 mail@domain
 EOF
 openssl pkcs12 -passout pass:123456 -passin pass:123456 -export -inkey "${curdir}/issued/_key.pem" -in "${curdir}/issued/cert.pem" -out "${curdir}/issued/cert.p12"

@@ -9,12 +9,15 @@ import filelock
 
 SHAREDOBJECTPATH = '/dev/shm/shared.json'#sharedmemory no present avant python 3.8
 
+LOG_DEBUG = -1
 LOG_INFO = 0
 LOG_ERROR = 1
 
+
 LOGDICT = {
     LOG_INFO: 'LOG_INFO',
-    LOG_ERROR: 'LOG_ERROR'
+    LOG_ERROR: 'LOG_ERROR',
+    LOG_DEBUG: 'LOG_DEBUG'
 }
 
 CURRDIR = os.path.abspath(os.path.dirname(__file__))
@@ -35,8 +38,8 @@ class logger:
                 sharedobject = {}
             if printerstatus: sharedobject['printerstatus'] = printerstatus
             if addprintercount:
-                if sharedobject['printercount']: sharedobject['printercount'] += addprintercount
-                if sharedobject['printercount']: sharedobject['printercount'] = addprintercount
+                if 'printercount' in list(sharedobject): sharedobject['printercount'] += addprintercount
+                else: sharedobject['printercount'] = addprintercount
             if internalerror: sharedobject['internalerror'] = internalerror
             open(SHAREDOBJECTPATH, 'w').write(json.dumps(sharedobject, indent=4))
 

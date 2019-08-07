@@ -41,10 +41,13 @@
 					<td>Internal Error</td>
 					<td><div id="internalerror">UNKNOWN<br/></td>
 				</tr>
+				<tr>
+					<td>Last Log</td>
+					<td><div id="lastlog">UNKNOWN<br/></td>
+				</tr>
 			</tbody>
 		</table>
 	</div>
-
 
 <script>
   var counter = 0;
@@ -85,6 +88,11 @@
 	source.addEventListener('cputemp', function(event) {
     var message = JSON.parse(event.data).message;
     var elem = document.getElementById("cputemp");
+    elem.innerHTML = message;
+  }, false);
+	source.addEventListener('lastlog', function(event) {
+    var message = JSON.parse(event.data).message;
+    var elem = document.getElementById("lastlog");
     elem.innerHTML = message;
   }, false);
 </script>

@@ -55,6 +55,12 @@ class backgroundexec(threading.Thread):
                                       type='cputemp')
                 flask_sse.sse.publish({'message': '{} %'.format(psutil.virtual_memory().percent)},
                                       type='mempercent')
+                try:
+                    lastlog = open(os.path.join(CURRPATH, '..', 'logs', 'logs.txt'
+                                               )).read()[-10:].replace('\n', '<br/>')
+                    flask_sse.sse.publish({'message': '{} %'.format(lastlog)},
+                                          type='lastlog')
+                except: pass
 
 def require_admin(func):
     '''

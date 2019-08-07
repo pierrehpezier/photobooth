@@ -78,7 +78,7 @@ EOF
 cat << EOF > /lib/systemd/system/adminserver.service
 [Service]
 Type=simple
-ExecStart=/home/pi/photobooth/server/server.py --port 4443 --cert=/home/pi/photobooth/pki/issued/cert.pem --key=/home/pi/photobooth/pki/issued/key.pem
+ExecStart=gunicorn3 server --certfile /home/pi/photobooth/pki/issued/cert.pem --keyfile /home/pi/photobooth/pki/issued/key.pem  --bind 0.0.0.0:8000 --pythonpath /home/pi/photobooth/server/
 User=pi
 Restart=on-failure
 TimeoutStopSec=3

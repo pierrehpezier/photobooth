@@ -122,7 +122,6 @@ class Photomaton:
         self.flash_off()
         if highres:
             print('photo prise en', time.time() - time1, 'secondes')
-        logger.logger.logEvent(logger.LOG_INFO, 'Photo prise')
         return img
 
     def flash_on(self):
@@ -399,7 +398,7 @@ class Photomaton:
         self.screen.blit(img, (0, 0))
         del img#Memory optimisation
         self.showtext(u'Génération en cours, patientez!!',
-                      color=self.fontcolor, fill=False, flip=True, scale=3)
+                      color=self.fontcolor, fill=False, flip=True, offset=-250, scale=3)
         #Photo rendering. Voir render.py
         generator = render.Render()
         filename = generator.gen(photolist)
@@ -471,15 +470,15 @@ class Photomaton:
         logger.logger.logStatus('Impression', 1)
         #impression sauvage
         self.showtext('Impression en cours..', color=self.fontcolor, flip=False, fill=True)
-        self.showtext('Télécharger avec le WiFi photomaton',
-                      color=self.fontcolor, offset=100, fill=False)
+        self.showtext('Télécharger sur WiFi photomaton!',
+                      color=self.fontcolor, offset=300, fill=False)
         img = pygame.image.load(os.path.join(self.temppath, 'qrcode.png')).convert()
         img = pygame.transform.smoothscale(img, (300, 300))
         self.screen.blit(img, (10, 10))
         pygame.display.flip()
         print('impression demandée!!')
         conn = cups.Connection()
-        conn.printFile(filename, title='IMG', options={'StpBorderless': 'True'})
+        conn.printFile(printer=self.printername, filename=filename, title='IMG', options={'StpBorderless': 'True'})
         #temporisation avec barre de chargement
         for i in range(self.printtime * 10, 0, -1):
             #TODO -> cups status guttenprint
