@@ -51,14 +51,14 @@ class backgroundexec(threading.Thread):
                 flask_sse.sse.publish({'message': '{} %'.format(psutil.cpu_percent())},
                                       type='cpupercent')
                 flask_sse.sse.publish({'message': '{} %'.format(
-                    psutil.sensors_temperatures()[list(psutil.sensors_temperatures())[0]][0])},
+                    psutil.sensors_temperatures()[list(psutil.sensors_temperatures())[0]][0].current)},
                                       type='cputemp')
                 flask_sse.sse.publish({'message': '{} %'.format(psutil.virtual_memory().percent)},
                                       type='mempercent')
                 try:
-                    lastlog = open(os.path.join(CURRPATH, '..', 'logs', 'logs.txt'
-                                               )).read()[-10:].replace('\n', '<br/>')
-                    flask_sse.sse.publish({'message': '{} %'.format(lastlog)},
+                    lastlog = open(os.path.join(CURRPATH, '..', 'log', 'logs.txt'
+                                               )).readlines()[-10:]
+                    flask_sse.sse.publish({'message': '{}'.format(''.join('{}<br/>'.format(x) for x in lastlog))},
                                           type='lastlog')
                 except: pass
 
@@ -114,8 +114,20 @@ def logout():
         flask.session['username'] = None
     return flask.redirect('/')
 
+@application.route('/api', methods=['GET', 'POST'])
+def api():
+    retval = {
+             'shared_data': json.loads(open(SHAREDOBJECTPATH).read()),
+             'machine': {
+                'cpu_percent': psutil.cpu_percent(),
+                'cputemp': psutil.sensors_temperatures()[list(psutil.sensors_temperatures())[0]][0].current,
+                'mempercent': psutil.virtual_memory().percent
+             },
+                'logs': open(os.path.join(CURRPATH, '..', 'log', 'logs.txt')).read().split('\n')
+             }
+    return json.dumps(retval, indent=4)
+
 @application.route('/', methods=['GET', 'POST'])
-@require_admin
 def index():
     '''
     Affiche le menu

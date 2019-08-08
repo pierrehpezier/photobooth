@@ -31,11 +31,11 @@ class logger:
         '''
         Send status to the server
         '''
+        try:
+            sharedobject = json.loads(open(SHAREDOBJECTPATH).read())
+        except(FileNotFoundError, json.decoder.JSONDecodeError):
+            sharedobject = {}
         with filelock.FileLock(SHAREDOBJECTPATH):
-            try:
-                sharedobject = json.loads(open(SHAREDOBJECTPATH).read())
-            except(FileNotFoundError, json.decoder.JSONDecodeError):
-                sharedobject = {}
             if printerstatus: sharedobject['printerstatus'] = printerstatus
             if addprintercount:
                 if 'printercount' in list(sharedobject): sharedobject['printercount'] += addprintercount

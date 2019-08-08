@@ -17,7 +17,7 @@ chmod g+rw /dev/gpiomem
 #install software
 cd /home/pi/
 sudo -u pi git clone --depth=1 https://github.com/pierrehpezier/photobooth
-sudo -u pi pypy3 -m pip install -r photobooth/src/requirements.txt --user
+sudo -u pi pypy3 -m pip incordova.plugin.http.setHeader('www.example.com', 'Header', 'Value');stall -r photobooth/src/requirements.txt --user
 sudo -u pi python3 -m pip install -r photobooth/src/requirements.txt --user
 sudo -u pi pypy3 -m pip install -r photobooth/server/requirements.txt --user
 sudo -u pi python3 -m pip install -r photobooth/server/requirements.txt --user
