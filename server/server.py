@@ -7,6 +7,7 @@ import os
 import json
 import hashlib
 import time
+import textile
 import threading
 import functools
 import binascii
@@ -116,6 +117,7 @@ def logout():
 
 @application.route('/api', methods=['GET', 'POST'])
 def api():
+    lastlog = open(os.path.join(CURRPATH, '..', 'log', 'logs.txt')).readlines()[-10:]
     retval = {
              'shared_data': json.loads(open(SHAREDOBJECTPATH).read()),
              'machine': {
@@ -123,9 +125,9 @@ def api():
                 'cputemp': psutil.sensors_temperatures()[list(psutil.sensors_temperatures())[0]][0].current,
                 'mempercent': psutil.virtual_memory().percent
              },
-                'logs': open(os.path.join(CURRPATH, '..', 'log', 'logs.txt')).read().split('\n')
+                'logs': lastlog[::-1]
              }
-    return json.dumps(retval, indent=4)
+    return '<html><header><meta http-equiv="refresh" content="5"></header><body>{}</body></html>'.format(textile.textile(json.dumps(retval, indent=4)).replace('\n', '<br/>\n').replace(' ', '&nbsp'))
 
 @application.route('/', methods=['GET', 'POST'])
 def index():

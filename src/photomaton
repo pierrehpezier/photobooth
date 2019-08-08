@@ -148,6 +148,7 @@ class Photomaton:
         return os.path.join(imgdir, imagename)
 
     def _check_erreurs(self, check_cam=False):
+        logger.logger.logStatus(internalerror='')
         if check_cam:
             try:
                 cam = picamera.PiCamera()
@@ -184,7 +185,6 @@ class Photomaton:
             logger.logger.logEvent(logger.LOG_ERROR, 'Erreur de configuration réseau')
             return False
         try:
-            #Bus 001 Device 006: ID 04a9:327a Canon, Inc.
             conn = cups.Connection()
             printers = conn.getPrinters()
             if self.printername not in list(printers):
