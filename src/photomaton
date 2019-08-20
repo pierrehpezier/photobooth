@@ -242,22 +242,21 @@ class Photomaton:
                     pygame.event.clear()
                     pygame.display.flip()
                     redraw = False
-                print('wait...')
                 event = pygame.event.wait()
                 if event.type == pygame.QUIT or\
                    (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                    print('À la prochaine!')
                     pygame.quit()
                     logger.logger.logEvent(logger.LOG_INFO, 'Sortie à la demande de l\'utilisateur')
                     sys.exit(0)
                 elif event.type == pygame.JOYBUTTONDOWN:
-                    print('bouton pressé:', event.button)
                     if event.button in [JOYBUTTONA, JOYBUTTONB]:
                         self.prendre_photos()
+                        redraw = True
                     elif event.button == JOYBUTTONSTART:
                         self.admin_menu()
-                    redraw = True
-
+                        redraw = True
+                    else:
+                        redraw = False
     @staticmethod
     def _reboot():
         print('Reboot')
@@ -366,20 +365,23 @@ class Photomaton:
         photolist = []
         for photonb in range(0, self.nbphotos):
             time1 = time.time()
-            self.background()
+            self.background()nbphotos
             pygame.display.flip()
             #Affiche le compte à rebours et l'aperçu
             self.screen.blit(self.font.render('photo {} sur {}'.format(photonb + 1,
                                                                        self.nbphotos),
                                               2, self.fontcolor), (0, 0))
-            while self.sleeptime - int(time.time()-time1) > 0:
-                print('capture photo:', photonb)
+            oldcounter = -1
+            while self.sleeptime - int(time.time()-time1) > 0:#EIP
                 counter = self.sleeptime - int(time.time()-time1)
-                img = pygame.image.load(self._get_image_path('{}.png'.format(counter))).convert()
-                self.screen.blit(img, (int(self.width/2 - 36), 50))
+                if counter != oldcounter:
+                    counterimg = pygame.image.load(self._get_image_path('{}.png'.format(counter))).convert()
+                    oldcounter = counter
                 preview = self.prendre_photo(highres=False, flash=False)
-                preview = pygame.transform.smoothscale(preview, (320, 240))
-                self.screen.blit(preview, (int(self.width/2 - 160), 200))
+                self.screen.blit(preview, (int(self.width/2 - preview.get_width()/2),
+                                           int(self.height/2 - preview.get_height()/2)))
+                self.screen.blit(counterimg, (int(self.width/2 - counterimg.get_width()/2),
+                                              int(self.height/2 - counterimg.get_height()/2)))
                 pygame.display.flip()
             #Affichage de l'image
             self.screen.fill((255, 255, 255))
