@@ -148,14 +148,15 @@ class Assemble:
     def ajoutbanderole(self):
         '''!Ajout de la banderole sous les photos
         '''
-        img = pygame.image.load(os.path.join(self.curdir, self.banderole)).convert_alpha()
-        img = pygame.transform.scale(img, (int(self.resolution[0] * self.banderolewidth),
-                                           int(img.get_height() *
-                                               ((self.resolution[0] *
-                                                 self.banderolewidth)/float(img.get_width())))))
-        self.surface.blit(img, (self.resolution[0]/2 - img.get_width()/2,
-                                self.photoscale[1] * 3 + 3 *
-                                self.photoymarge + 50 + self.photoiniymarge))
+        if self.banderole:
+            img = pygame.image.load(os.path.join(self.curdir, self.banderole)).convert_alpha()
+            img = pygame.transform.scale(img, (int(self.resolution[0] * self.banderolewidth),
+                                               int(img.get_height() *
+                                                   ((self.resolution[0] *
+                                                     self.banderolewidth)/float(img.get_width())))))
+            self.surface.blit(img, (self.resolution[0]/2 - img.get_width()/2,
+                                    self.photoscale[1] * 3 + 3 *
+                                    self.photoymarge + 50 + self.photoiniymarge))
 
     def set_footer(self):
         '''!Ajout de l'image en pied de page
