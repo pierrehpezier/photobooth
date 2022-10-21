@@ -7,8 +7,8 @@ from typing import Union, Optional, Tuple
 LOG = logging.getLogger(__name__)
 
 class Display:
-    def __init__(self, conf):
-        self.conf = conf
+    def __init__(self):
+        print('Display')
         os.environ['DISPLAY'] = ':0.0'
         pygameinfo = pygame.display.Info()
         size = (pygameinfo.current_w, pygameinfo.current_h)
@@ -25,7 +25,7 @@ class Display:
     def __del__(self):
         pygame.quit()
 
-    def _load_image(self, img: Union[str, pygame.Surface], 
+    def load_image(self, img: Union[str, pygame.Surface], 
                     width: Optional[Union[float, int]] = None,
                     height: Optional[Union[float, int]] = None, 
                     x: Optional[Union[float, int]] = None,
@@ -42,7 +42,8 @@ class Display:
             return img
         self.screen.blit(img, (x, y))
 
-    def _showtext(self, text: str,
+
+    def showtext(self, text: str,
                   width: Optional[Union[float, int]] = None,
                   height: Optional[Union[float, int]] = None, 
                   x: Optional[Union[float, int]] = None,
@@ -50,16 +51,16 @@ class Display:
                   color: Tuple[int]=(255, 255, 255)) -> Optional[pygame.Surface]:
         text = self.conf.get_text(text)
         img = self.font.render(text, 1, color)
-        return self._load_image(img, width, height, x, y)
+        return self.load_image(img, width, height, x, y)
 
 
     def display_welcome_screen(self) -> None:
         """
 		Display welcome screen to users
 		"""
-        self._load_image("menu_background.jpg", self.width, self.height, 0, 0)
-        self._load_image("NES.png",
+        self.load_image("menu_background.png", self.width, self.height, 0, 0)
+        self.load_image("NES.png",
                          self.width/2, None, self.width/2 - (self.width/2)/2, self.height-self.height/3)
-        self._showtext("press_A_B_choice", 
-                       self.width/2, None, self.width/2 - (self.width/2)/2, self.height/3)
+        self.showtext("press_A_B_choice", 
+                       self.width/2, None, self.width/2 - (self.width/2)/2, self.height/4)
         pygame.display.flip()

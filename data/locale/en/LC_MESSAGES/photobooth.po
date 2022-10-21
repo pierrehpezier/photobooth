@@ -17,3 +17,6 @@ msgstr ""
 
 msgid "press_A_B_choice"
 msgstr "Press A or B"
+
+msgid "photo"
+msgstr "photo"

@@ -5,8 +5,8 @@ from core import main
 from conf.conf import conf
 
 def run():
-    _conf = conf()
     pygame.init()
+    _conf = conf()
     main.Photobooth(_conf)
 
 if __name__ == "__main__":

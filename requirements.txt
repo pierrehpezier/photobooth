@@ -1,0 +1,13 @@
+picamera
+qrcode
+gpio4
+ConfigParser
+pygame
+pycups
+Image
+Pillow-PIL
+pil-compat
+RPi.GPIO
+filelock
+textile
+coloredlogs

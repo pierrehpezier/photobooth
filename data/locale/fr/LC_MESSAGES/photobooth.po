@@ -16,3 +16,6 @@ msgstr ""
 
 msgid "press_A_B_choice"
 msgstr "Appuyer sur A ou B"
+
+msgid "photo"
+msgstr "photo"
