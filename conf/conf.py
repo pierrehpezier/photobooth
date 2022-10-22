@@ -1,7 +1,9 @@
 from importlib.abc import Loader
-import locale
+from typing import Optional
 import os
 import yaml
+import struct
+import socket
 import pathlib
 import gettext
 
@@ -52,6 +54,39 @@ class conf:
     def flash_enabled() -> bool:
         return True
 
+    def get_customisation(self, name: str) -> Optional[str]:
+        try:
+            return self.yml["customisation"][name]
+        except KeyError:
+            return None
 
-if __name__ == "__main__":
-    conf().set_lang("fr")
+    @staticmethod
+    def get_storage_path() -> pathlib.Path:
+        path = pathlib.Path("/var/www/html/img")
+        path.mkdir(exist_ok=True)
+        return path
+
+    @staticmethod
+    def _get_default_gateway_linux():
+        '''!Read the default gateway directly from /proc
+        @return L'adresse IP de la gateway
+        '''
+        with open('/proc/net/route') as routefile:
+            for line in routefile:
+                fields = line.strip().split()
+                if fields[1] != '00000000' or not int(fields[3], 16) & 2:
+                    continue
+                return socket.inet_ntoa(struct.pack('<L', int(fields[2], 16)))
+
+    @staticmethod
+    def get_ip():
+        try:
+            return [(s.connect((conf._get_default_gateway_linux(), 67)),
+                     s.getsockname()[0], s.close())
+                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
+        except:
+            return '127.0.0.1'
+
+    @staticmethod
+    def get_webserver_url() -> str:
+        return f"http://{conf.get_ip()}/img/"

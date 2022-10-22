@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- CODING: UTF-8 -*-
+import threading
 import pygame
 import time
 import logging
-import coloredlogs
 from typing import List
 from core import display
 from core import raspio
@@ -21,8 +21,9 @@ class Photobooth(raspio.Io, display.Display):
         #super().__init__()
         raspio.Io.__init__(self)
         display.Display.__init__(self)
-        print("init done")
-        self.mainloop()
+        LOG.debug("init done")
+        while True:
+            self.mainloop()
 
 
     def mainloop(self):
@@ -32,30 +33,41 @@ class Photobooth(raspio.Io, display.Display):
         self.display_welcome_screen()
 
         # Wait for user input
-        while input := self.get_joy_input() not in  (raspio.JOYBUTTONA, raspio.JOYBUTTONB):
+        while self.get_joy_input() not in  (raspio.JOYBUTTONA, raspio.JOYBUTTONB):
             pass
         # Retrieve the list of pictures
-        img_list: List[pygame.Surface] = [self._take_photo(text=f'{self.conf.get_text("photo")} {i} sur 6') for i in range(1, 6 + 1)]
+        currthreadnb = threading.active_count()
+        for index in range(1, 7):
+            self.render_single_img(self._take_photo(text=f'{self.conf.get_text("photo")} {index} sur 6'), index)
 
+        t1 = time.time()
+        self.boot_screen(text=self.conf.get_text("processing"))
+        while threading.active_count() > currthreadnb:
+            time.sleep(.1)
+        LOG.debug(f"Processed in {time.time() - t1} seconds")
+        url = self.save_image(self.get_photo())
+        self.display_finished_photo(url)
+        while user_input := self.get_joy_input() not in  (raspio.JOYBUTTONA, raspio.JOYBUTTONB):
+            pass
+        if user_input == raspio.JOYBUTTONB:
+            self.print()
+        # End of mainloop
 
     def _take_photo(self, text) -> pygame.Surface:
         t1 = time.time()
         self.screen.fill((0, 0, 0))
         last_sec = 5
+        thread = None
         while (elapsed := int(time.time() - t1)) < 5:
-            preview = self.take_photo(resolution=(640, 480), flash=False)
+            preview = self.take_photo(preview=True, flash=False)
             self.load_image(preview, x=self.width/2 - preview.get_width()/2, y=self.height/2 - preview.get_height()/2)
-            self.showtext(text, x=100, y=100)
-            self.showtext(str(5 - elapsed), x=100, y=300)
+            self.showtext(text, height=100, x=100, y=10)
+            self.showtext(str(5 - elapsed), width=100, x=self.width/2-50, y=150)
             pygame.display.flip()
-        photo = self.take_photo()
+        self.screen.fill((255, 255, 255))
+        pygame.display.flip()
+        photo = self.take_photo(preview=False, flash=True)
         self.load_image(photo, width=self.width, x=0, y=0)
         pygame.display.flip()
         time.sleep(3)
         return photo
-
-
-if __name__ == '__main__':
-    LOG.info('Demarrage du photomaton')
-    coloredlogs.install(level=logging.INFO)
-    Photobooth()

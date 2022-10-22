@@ -16,7 +16,19 @@ msgstr ""
 
 
 msgid "press_A_B_choice"
-msgstr "Press A or B"
+msgstr "Press a red button"
 
 msgid "photo"
 msgstr "photo"
+
+msgid "booting"
+msgstr "Booting up"
+
+msgid "processing"
+msgstr "Processing"
+
+msgid "wifi"
+msgstr "wifi"
+
+msgid "cancel"
+msgstr "cancel"

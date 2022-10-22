@@ -1,3 +1,8 @@
 ---
-gui:
-  lang: fr
+customisation:
+    bg_color:
+      - 0xFF
+      - 0
+      - 0
+    footer: footer.png
+    hotspot: photomaton

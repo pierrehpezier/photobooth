@@ -15,7 +15,22 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 
 msgid "press_A_B_choice"
-msgstr "Appuyer sur A ou B"
+msgstr "Appuyer sur une touche rouge"
 
 msgid "photo"
 msgstr "photo"
+
+msgid "booting"
+msgstr "Démarrage en cours"
+
+msgid "processing"
+msgstr "Traitement en cours"
+
+msgid "wifi"
+msgstr "wifi"
+
+msgid "print"
+msgstr "imprimer"
+
+msgid "cancel"
+msgstr "annuler"
