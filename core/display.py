@@ -8,21 +8,30 @@ from conf.conf import conf
 
 LOG = logging.getLogger(__name__)
 
+class DisplayError(Exception):
+    pass
+
+
 class Display:
+    screen = None
     def __init__(self):
         LOG.debug("Loading Display components")
-        pygameinfo = pygame.display.Info()
-        size = (pygameinfo.current_w, pygameinfo.current_h)
-        ##Largeur de l'écran
-        self.width = pygameinfo.current_w
-        ##Hauteur de l'écran
-        self.height = pygameinfo.current_h
-        ##Surface pygame
-        self.font = pygame.font.Font(self.conf.get_font(), int(self.width / 15))
-        self.screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
-        self.boot_screen()
-        pygame.mouse.set_visible(False)
-        self.photo_canevas = self._init_img()
+        try:
+            pygameinfo = pygame.display.Info()
+            size = (pygameinfo.current_w, pygameinfo.current_h)
+            ##Largeur de l'écran
+            self.width = pygameinfo.current_w
+            ##Hauteur de l'écran
+            self.height = pygameinfo.current_h
+            ##Surface pygame
+            self.font = pygame.font.Font(self.conf.get_font(), int(self.width / 15))
+            if not self.screen:
+                self.screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
+            self.boot_screen()
+            pygame.mouse.set_visible(False)
+            self.photo_canevas = self._init_img()
+        except Exception as error:
+            raise DisplayError(str(error))
 
     def __del__(self):
         pygame.quit()
@@ -63,18 +72,6 @@ class Display:
                          self.width/2, None, self.width/2 - (self.width/2)/2, self.height-self.height/3)
         self.showtext("press_A_B_choice", 
                        self.width/2, None, self.width/2 - (self.width/2)/2, self.height/4)
-        pygame.display.flip()
-
-    def boot_screen(self, text: Optional[str]=None) -> None:
-        if not text:
-            text = self.conf.get_text("booting")
-        self.screen.fill((0, 0, 0))
-        self.showtext(text, x=100, y=10, height=100)
-        self.load_image("rendering.png",
-                        width=self.width/2,
-                        x = self.width / 4,
-                        y = self.height / 4
-                        )
         pygame.display.flip()
 
     def _init_img(self) -> pygame.Surface:
@@ -152,6 +149,25 @@ class Display:
                                    width=self.screen.get_width() - 2 * qrcodemargin - xoffset,
                                   ).get_height() + 10
         pygame.display.flip()
+
+    def boot_msg_info(self, text: str, picture: str) -> None:
+        self.screen.fill((0, 0, 0))
+        self.showtext(text, x=100, y=10, height=100)
+        self.load_image(picture,
+                        width=self.width/2,
+                        x = self.width / 4,
+                        y = 110
+                        )
+        pygame.display.flip()
+
+    def boot_screen(self, text: Optional[str] = None) -> None:
+        if text:
+            self.boot_msg_info(text=text, picture="rendering.png")
+        else:
+            self.boot_msg_info(text=self.conf.get_text("booting"), picture="rendering.png")
+
+    def alert_screen(self, msg: str) -> None:
+        self.boot_msg_info(text=msg, picture="Cz-Error.png")
 
 if __name__ == "__main__":
     pygame.init()

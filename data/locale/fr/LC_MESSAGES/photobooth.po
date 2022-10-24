@@ -34,3 +34,12 @@ msgstr "imprimer"
 
 msgid "cancel"
 msgstr "annuler"
+
+msgid "photobooth"
+msgstr "photomaton"
+
+msgid "printing"
+msgstr "En attente de la fin de l'impression"
+
+msgid "printer_problem"
+msgstr "Problème d'impression"

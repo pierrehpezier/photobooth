@@ -32,3 +32,12 @@ msgstr "wifi"
 
 msgid "cancel"
 msgstr "cancel"
+
+msgid "photobooth"
+msgstr "photobooth"
+
+msgid "printing"
+msgstr "Waiting for print jobs to finish"
+
+msgid "printer_problem"
+msgstr "Printer problem"

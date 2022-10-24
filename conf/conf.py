@@ -61,6 +61,10 @@ class conf:
             return None
 
     @staticmethod
+    def get_rss_path() -> pathlib.Path:
+        return pathlib.Path("/var/www/html/.rss")
+
+    @staticmethod
     def get_storage_path() -> pathlib.Path:
         path = pathlib.Path("/var/www/html/img")
         path.mkdir(exist_ok=True)
