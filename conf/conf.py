@@ -1,15 +1,18 @@
 from importlib.abc import Loader
+from modulefinder import LOAD_CONST
 from typing import Optional
 import os
 import yaml
 import struct
 import socket
 import pathlib
+import logging
 import gettext
 
 ROOT_DIR = pathlib.Path(__file__).parent.parent
 USER_DIR = pathlib.Path(os.environ["HOME"], ".photobooth")
 
+LOG = logging.getLogger(__name__)
 
 class ConfError(Exception):
     pass
@@ -17,11 +20,12 @@ class ConfError(Exception):
 
 class conf:
     def __init__(self):
-        self.user_conf = USER_DIR / "conf.yml"
-        if self.user_conf.is_file():
-            self.yml = yaml.safe_load(self.user_conf.open())
-        else:
+        try:
+            self.yml = yaml.safe_load((USER_DIR / "conf.yml").open())
+            LOG.debug("Using user path")
+        except FileNotFoundError:
             self.yml = yaml.safe_load((ROOT_DIR / "conf" / "default_conf.yml").open())
+            LOG.debug("Using default path")
         traduction = gettext.translation('photobooth',
                                          localedir= ROOT_DIR / "data" / "locale")
                                          #languages=[locale.getlocale()[0].split("_")[0]])
@@ -40,6 +44,9 @@ class conf:
 
     @staticmethod
     def get_image_path(imgname: str) -> pathlib.Path:
+        retval = USER_DIR / "data" / "img" / imgname
+        if retval.is_file():
+            return retval
         retval = ROOT_DIR / "data" / "img" / imgname
         if not retval.is_file():
             raise ConfError(f'File "{retval}" does not exists')

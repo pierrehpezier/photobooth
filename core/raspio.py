@@ -7,6 +7,7 @@ from typing import Optional, List, Tuple
 import pygame
 import cups
 import io
+import uuid
 import cups
 import RPi.GPIO as GPIO
 import picamera
@@ -32,26 +33,39 @@ class IoError(Exception):
 
 
 class Io:
+    conf = None
+    cups_conn = None
+    camera = None
+
     def __init__(self):
         LOG.debug("Loading IO components")
         self.feeds: List[rfeed.Item] = []
         try:
-            self.cups_conn = cups.Connection()
+            if not self.cups_conn:
+                self.cups_conn = cups.Connection()
+                printers = self.cups_conn.getPrinters()
+                if printers:
+                    self.printername = list(printers)[0]
+                    LOG.debug(f'Found printer: {self.printername}')
+                else:
+                    self.cups_conn = None
+                    LOG.error("No printer found")
+                    raise IoError("No printer found")
+                LOG.debug(f'Found printer "{self.printername}"')
+                self.cups_conn.enablePrinter(self.printername)
+                self.cups_conn.cancelAllJobs(self.printername)
+
             GPIO.setwarnings(False)
             GPIO.setmode(GPIO.BOARD)
             GPIO.setup(GPIO_PORT, GPIO.OUT, initial=GPIO.HIGH)
-            self.cups = cups.Connection()
-            self.camera = picamera.PiCamera()
+            if not self.camera:
+                self.camera = picamera.PiCamera()
+                #self.camera.close()
             pygame.joystick.Joystick(0).init()
             LOG.debug(f"Found {pygame.joystick.get_count()} joysticks")
             self.joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
-            if len(self.cups_conn.getPrinters()) != 1:
-                raise TypeError()
-            self.printername = self.cups_conn.getPrinters()[0]
-            LOG.debug(f'Found printer "{self.printername}"')
-            self.cups_conn.enablePrinter(self.printername)
-            self.cups_conn.cancelAllJobs(self.printername)
-        except Exception as error:
+        except KeyboardInterrupt as error:
+            LOG.error(f'Error: "{error}"')
             raise IoError(str(error))
 
 
@@ -100,51 +114,47 @@ class Io:
             GPIO.output(7, GPIO.LOW)
 
     def _wait_for_processing_jobs(self):
+        LOG.debug("Waiting for printer to be ready")
         while any(
             self.cups_conn.getJobAttributes(job_id)["job-state"] == cups.IPP_JOB_PROCESSING
             for job_id in list(self.cups_conn.getJobs())
         ):
             time.sleep(1)
+        LOG.debug("Printer Ready")
 
-    def print(self, file_path: pathlib.Path) -> None:
-        self.boot_screen(self.get_text("printing"))
-
-        if self.cups_conn.getPrinterAttributes(self.printername)["printer-state"] not in (cups.IPP_PRINTER_PROCESSING,
-                                                                                          cups.IPP_PRINTER_IDLE,
-                                                                                          cups.IPP_PRINTER_BUSY):
-            reasons = "".join(f"{x}," for x in 
-                              self.cups_conn.getPrinterAttributes(self.printername)["printer-state-reasons"]
-                             ).rstrip(",")
-            self.alert(f'{self.get_text("printer_problem")}: {reasons}')
-
+    def print_img(self, file_path: pathlib.Path) -> None:
+        LOG.info(f'Demand to print: "{file_path}"')
+        self.boot_screen(self.conf.get_text("printing"))
         self._wait_for_processing_jobs()
-        for job in [self.cups_conn.getJobAttributes(job_id) for job_id in list(self.cups_conn.getJobs())]:
-            if job["job-state"] not in (cups.IPP_JOB_PROCESSING, cups.IPP_JOB_PENDING):
-                self.cups_conn.cancelJob(job["job-id"])
-        
-        '''
-        while jobs := list():
-            for job_id in jobs:
-                job = self.cups_conn.getJobAttributes(job_id)
-                if job["job-state"] != cups.IPP_JOB_PROCESSING:
 
-                if job["job-state"] != cups.IPP_JOB_PROCESSING:
-                    msg = f'{job["job-state"]} {job["job-state-reasons"]}'
-                    self.alert(msg)
-'''
+        for job_id in list(self.cups_conn.getJobs()):
+            job = self.cups_conn.getJobAttributes(job_id)
+            if time.time() - job["time-at-creation"] > 600: # Cancel if it tool more than 10m
+                self.cups_conn.cancelJob(job_id)
+                self.alert_rss(f'Cancelling job "{job_id}"')
+                LOG.error(f'Cancelling job "{job_id}"')
+            elif self.cups_conn.getPrinters()[self.printername]["printer-state"] != cups.IPP_PRINTER_STOPPED:
+                self.cups_conn.restartJob(job_id)
+                LOG.error(f'Restarting job "{job_id}"')
+                self.alert_rss(f'Restarting job "{job_id}"')
+            else:
+                LOG.error(f'Job still stuck "{job_id}"')
         self.cups_conn.printFile(printer=self.printername,
-                                 filename=str(file_path),
+                                 filename=str(file_path.resolve()),
                                  title='IMG',
                                  options={'StpBorderless': 'True'})
-        self.alert("")
-        LOG.error("Print not implemented")
+        self.boot_screen(self.conf.get_text("printing"))
+        time.sleep(3)  # giving a chance to detect paper problem
+        if self.cups_conn.getPrinters()[self.printername]["printer-state"] == cups.IPP_PRINTER_STOPPED:
+            self.alert(self.cups_conn.getPrinters()[self.printername]["printer-state-message"])
+        time.sleep(10)
 
     @staticmethod
     def flash_off() -> None:
         GPIO.output(7, GPIO.HIGH)
 
     def save_image(self, surface: pygame.Surface) -> Tuple[pathlib.Path, str]:
-        file_name = '{}.jpg'.format(time.strftime('%H-%M-%S-%d%m%Y'))
+        file_name = f'{time.strftime("%H-%M-%S-%d%m%Y")}.jpg'
         file_path = self.conf.get_storage_path() / file_name
         url = self.conf.get_webserver_url().rstrip("/") + "/" + file_name
 		# Copy file in background as it can take some time
@@ -157,12 +167,13 @@ class Io:
         return file_path.resolve(), url
 
     def alert_rss(self, msg: str, level: str="ERROR") -> None:
+        guid = str(uuid.uuid4())
         self.feeds.append(rfeed.Item(
             title = level,
-            link="mlkmlklmk",
+            link=str(guid),
             description = msg,
             author = self.conf.get_text("photobooth"),
-            guid = rfeed.Guid(str(self.feeds)),
+            guid = rfeed.Guid(guid),
             pubDate = datetime.datetime.now())
         )
         rss = rfeed.Feed(
@@ -173,12 +184,6 @@ class Io:
             items = self.feeds)
         try:
             self.conf.get_rss_path().write_text(rss.rss())
+            LOG.debug(f"Rss publised {len(self.feeds)} feeds ({msg})")
         except PermissionError:
             LOG.error(f'Cannot open "{self.conf.get_rss_path()}"')
-
-if __name__ == "__main__":
-	import coloredlogs
-	coloredlogs.install(level=logging.DEBUG)
-	pygame.init()
-	myio = Io()
-	myio.take_photo(flash=False)

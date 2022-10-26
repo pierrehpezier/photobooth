@@ -7,6 +7,9 @@ import logging
 from core import main
 from conf.conf import conf
 
+LOG = logging.getLogger(__name__)
+
+
 def run():
     pygame.init()
     _conf = conf()
@@ -15,4 +18,7 @@ def run():
 if __name__ == "__main__":
     coloredlogs.install(level=logging.DEBUG)
     os.environ['DISPLAY'] = ':0.0'
-    run()
+    try:
+        run()
+    except KeyboardInterrupt:
+        LOG.info("User exit")

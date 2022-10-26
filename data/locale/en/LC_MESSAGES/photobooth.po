@@ -37,7 +37,7 @@ msgid "photobooth"
 msgstr "photobooth"
 
 msgid "printing"
-msgstr "Waiting for print jobs to finish"
+msgstr "Already printing"
 
 msgid "printer_problem"
 msgstr "Printer problem"

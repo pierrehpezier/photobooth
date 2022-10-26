@@ -39,7 +39,7 @@ msgid "photobooth"
 msgstr "photomaton"
 
 msgid "printing"
-msgstr "En attente de la fin de l'impression"
+msgstr "En cours d'impression"
 
 msgid "printer_problem"
 msgstr "Problème d'impression"

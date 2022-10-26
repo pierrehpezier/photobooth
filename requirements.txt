@@ -11,3 +11,4 @@ RPi.GPIO
 filelock
 textile
 coloredlogs
+rfeed

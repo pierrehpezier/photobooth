@@ -30,6 +30,7 @@ class Photobooth(raspio.Io, display.Display):
                     self.alert(last_error)
                 time.sleep(10)
         LOG.debug("init done. Initiating mainloop")
+        self.alert_rss("Photobooth starting", "INFO")
         while True:
             self.mainloop()
 
@@ -55,17 +56,18 @@ class Photobooth(raspio.Io, display.Display):
         LOG.debug(f"Processed in {time.time() - t1} seconds")
         image_path, url = self.save_image(self.get_photo())
         self.display_finished_photo(url)
-        while user_input := self.get_joy_input() not in  (raspio.JOYBUTTONA, raspio.JOYBUTTONB):
+        while (user_input := self.get_joy_input()) not in  (raspio.JOYBUTTONA, raspio.JOYBUTTONB):
             pass
         if user_input == raspio.JOYBUTTONB:
-            self.print(image_path)
+            LOG.info("user choose to print")
+            self.print_img(image_path)
+        else:
+            LOG.info("user choose not to print")
         # End of mainloop
 
     def _take_photo(self, text) -> pygame.Surface:
         t1 = time.time()
         self.screen.fill((0, 0, 0))
-        last_sec = 5
-        thread = None
         while (elapsed := int(time.time() - t1)) < 5:
             preview = self.take_photo(preview=True, flash=False)
             self.load_image(preview, x=self.width/2 - preview.get_width()/2, y=self.height/2 - preview.get_height()/2)
@@ -81,5 +83,6 @@ class Photobooth(raspio.Io, display.Display):
         return photo
 
     def alert(self, msg: str) -> None:
-        self.alert_screen(msg)
+        LOG.error(f'Alerting: "{msg}"')
         self.alert_rss(msg)
+        self.alert_screen(msg)

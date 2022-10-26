@@ -14,6 +14,8 @@ class DisplayError(Exception):
 
 class Display:
     screen = None
+    conf = None
+
     def __init__(self):
         LOG.debug("Loading Display components")
         try:
@@ -24,9 +26,9 @@ class Display:
             ##Hauteur de l'écran
             self.height = pygameinfo.current_h
             ##Surface pygame
-            self.font = pygame.font.Font(self.conf.get_font(), int(self.width / 15))
             if not self.screen:
                 self.screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
+            self.font = pygame.font.Font(self.conf.get_font(), int(self.width / 15))
             self.boot_screen()
             pygame.mouse.set_visible(False)
             self.photo_canevas = self._init_img()
@@ -83,7 +85,7 @@ class Display:
                                  width=surface.get_width() * 0.9)
 
         surface.blit(footer, (int((surface.get_width() * 0.1)/2),
-                              int(surface.get_height() * 0.9 - footer.get_height()/2)))
+                              int(surface.get_height() - int((surface.get_width() * 0.1)/2) - footer.get_height())))
         return surface
 
     def render_single_img(self, photo: pygame.Surface, index: int) -> None:
@@ -158,6 +160,7 @@ class Display:
                         x = self.width / 4,
                         y = 110
                         )
+        self.showtext(text, x=100, y=10, height=100)
         pygame.display.flip()
 
     def boot_screen(self, text: Optional[str] = None) -> None:
